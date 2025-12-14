@@ -1,0 +1,131 @@
+# ============================================
+# Starter App Launcher - .gitignore
+# ============================================
+
+# ============================================
+# Documentation & Planning (Ignore)
+# ============================================
+starter-app-vibe-md/
+
+# ============================================
+# Build Artifacts
+# ============================================
+build/
+dist/
+*.spec.bak
+*.pyc
+*.pyo
+*.pyd
+
+# ============================================
+# Python Cache
+# ============================================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# ============================================
+# Certificates & Private Keys (SECURITY)
+# ============================================
+*.pfx
+*.pem
+*.key
+*.cer
+*.crt
+*.p12
+code-signing-cert.pfx
+*.cert
+*.keystore
+
+# ============================================
+# MSIX Packages & Store Files
+# ============================================
+*.msix
+*.appx
+*.appxbundle
+msix-package/
+*.msixupload
+
+# ============================================
+# Backup Files
+# ============================================
+*.backup
+*.bak
+*.old
+*.orig
+*.tmp
+*~
+
+# ============================================
+# IDE & Editor Files
+# ============================================
+.vscode/
+.idea/
+*.swp
+*.swo
+*.swn
+.DS_Store
+Thumbs.db
+*.sublime-project
+*.sublime-workspace
+
+# ============================================
+# OS Files
+# ============================================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# ============================================
+# Logs & Temporary Files
+# ============================================
+*.log
+*.logs
+logs/
+*.tmp
+temp/
+tmp/
+
+# ============================================
+# Virtual Environment (if used)
+# ============================================
+venv/
+env/
+ENV/
+.venv/
+
+# ============================================
+# PyInstaller
+# ============================================
+*.manifest
+*.spec.bak
+
+# ============================================
+# Testing
+# ============================================
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.hypothesis/
+
+# ============================================
+# Configuration (if contains sensitive data)
+# ============================================
+# Uncomment if config.json contains sensitive info
+# config.json
+# *.config
+
+# ============================================
+# Project Specific
+# ============================================
+project_structure.txt
+*.md.bak
+
