@@ -53,10 +53,10 @@ class Sidebar(QWidget):
         else:
             # Fallback to emoji if image not found
             avatar_label.setText("👤")
-            avatar_label.setStyleSheet("font-size: 32px;")
+        avatar_label.setStyleSheet("font-size: 32px;")
         avatar_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         
-        title_label = QLabel("Starter App Launcher")
+        title_label = QLabel("Starter App Launcher (Beta)")
         title_label.setStyleSheet("font-size: 16px; font-weight: 600;")
         title_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         
@@ -127,12 +127,13 @@ class Sidebar(QWidget):
 class MainWindow(QMainWindow):
     """Main application window."""
     
-    def __init__(self, config_store, translator, icon_path=None):
+    def __init__(self, config_store, translator, icon_path=None, is_startup_launch=False):
         super().__init__()
         self.config_store = config_store
         self.translator = translator
+        self.is_startup_launch = is_startup_launch
         
-        self.setWindowTitle("Starter App Launcher")
+        self.setWindowTitle("Starter App Launcher (Beta)")
         self.setMinimumSize(1200, 800)
         
         # Set window icon (for taskbar)
@@ -165,7 +166,7 @@ class MainWindow(QMainWindow):
         
         # Create pages
         self.dashboard_page = DashboardPage(self.config_store, self.translator)
-        self.starter_page = StarterPage(self.config_store, self.translator)
+        self.starter_page = StarterPage(self.config_store, self.translator, is_startup_launch=self.is_startup_launch)
         self.admin_page = AdminPage(self.config_store, self.translator, self)
         self.coming_soon_page = ComingSoonPage(self.translator)
         

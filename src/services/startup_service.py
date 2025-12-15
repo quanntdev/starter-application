@@ -41,10 +41,11 @@ class StartupService:
         """
         try:
             # Get executable path - handle both frozen and development mode
+            # Add --startup argument to indicate app was started from Windows boot
             if getattr(sys, 'frozen', False):
                 # Running as compiled executable - use the exe directly
                 exe_path = sys.executable
-                task_command = f'"{exe_path}"'
+                task_command = f'"{exe_path}" --startup'
             else:
                 # Running as Python script
                 main_script = Path(__file__).parent.parent / "app" / "main.py"
@@ -57,7 +58,7 @@ class StartupService:
                 if not os.path.exists(python_exe):
                     python_exe = sys.executable
                 
-                task_command = f'"{python_exe}" "{main_script}"'
+                task_command = f'"{python_exe}" "{main_script}" --startup'
             
             print(f"Creating autostart task with command: {task_command}")
             

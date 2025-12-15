@@ -10,12 +10,12 @@
   <Identity
     Name="StarterAppLauncher"
     Publisher="CN=StarterAppLauncher"
-    Version="1.0.0.0" />
+    Version="1.0.0.0-beta" />
 
   <Properties>
-    <DisplayName>Starter App Launcher</DisplayName>
-    <PublisherDisplayName>Starter App Launcher</PublisherDisplayName>
-    <Description>Modern Windows desktop app for managing favorite applications, monitoring system metrics, and controlling startup programs.</Description>
+    <DisplayName>Starter App Launcher (Beta)</DisplayName>
+    <PublisherDisplayName>Starter App Launcher (Beta)</PublisherDisplayName>
+    <Description>Modern Windows desktop app for managing favorite applications, monitoring system metrics, and controlling startup programs. Beta Version.</Description>
     <Logo>Assets\StoreLogo.png</Logo>
   </Properties>
 
@@ -36,8 +36,8 @@
   <Applications>
     <Application Id="StarterAppLauncher" Executable="StarterAppLauncher.exe" EntryPoint="Windows.FullTrustApplication">
       <uap:VisualElements
-        DisplayName="Starter App Launcher"
-        Description="Modern Windows desktop app for managing favorite applications"
+        DisplayName="Starter App Launcher (Beta)"
+        Description="Modern Windows desktop app for managing favorite applications - Beta Version"
         Square150x150Logo="Assets\Square150x150Logo.png"
         Square44x44Logo="Assets\Square44x44Logo.png"
         BackgroundColor="#1e1e1e">
@@ -54,4 +54,5 @@
     </Application>
   </Applications>
 </Package>
+
 

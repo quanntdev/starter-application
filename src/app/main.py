@@ -15,13 +15,30 @@ if getattr(sys, 'frozen', False):
     # Add the bundle dir to path
     bundle_dir = getattr(sys, '_MEIPASS', application_path)
     sys.path.insert(0, str(bundle_dir))
+    # PyInstaller bundles modules directly in _MEIPASS, not in src subdirectory
+    # So modules are accessible as 'ui', 'i18n', etc. directly
 else:
-    # Running in development
+    # Running in development - add src to path
     sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from ui.main_window import MainWindow
-from i18n.translator import Translator
-from storage.config_store import ConfigStore
+# Import modules - PyInstaller bundles them without 'src' prefix
+try:
+    from ui.main_window import MainWindow
+    from i18n.translator import Translator
+    from storage.config_store import ConfigStore
+except ImportError as e:
+    # If import fails, try to debug
+    import traceback
+    print(f"Import error: {e}")
+    print(f"sys.path: {sys.path}")
+    if getattr(sys, 'frozen', False):
+        bundle_dir = getattr(sys, '_MEIPASS', '')
+        print(f"Bundle dir: {bundle_dir}")
+        if bundle_dir:
+            import os
+            print(f"Files in bundle: {os.listdir(bundle_dir)[:20]}")
+    traceback.print_exc()
+    raise
 
 
 def is_admin():
@@ -69,17 +86,37 @@ def request_admin_restart():
 
 def main():
     """Initialize and run the application."""
-    # Load config first to check admin requirement
-    temp_config = ConfigStore()
-    temp_config.load()
-    
-    # Check if user wants admin and we don't have it yet
-    if temp_config.get_require_admin() and not is_admin():
-        if request_admin_restart():
-            # Successfully triggered UAC, exit this instance immediately
-            import time
-            time.sleep(0.5)
-            sys.exit(0)
+    # Always allow app to run, even without admin
+    # Only request admin if user explicitly enabled it in settings AND we don't have it yet
+    try:
+        # Load config first to check admin requirement
+        temp_config = ConfigStore()
+        temp_config.load()
+        
+        # Check if user wants admin and we don't have it yet
+        # Only request admin if user explicitly enabled it in settings
+        # If user cancels UAC, continue running as normal user
+        should_request_admin = temp_config.get_require_admin() and not is_admin()
+        
+        if should_request_admin:
+            try:
+                if request_admin_restart():
+                    # Successfully triggered UAC, exit this instance immediately
+                    import time
+                    time.sleep(0.5)
+                    sys.exit(0)
+                # If request failed or user cancelled, continue as normal user
+                # Don't exit - let app run without admin privileges
+                print("User cancelled UAC or request failed. Continuing as normal user.")
+            except Exception as e:
+                # If there's any error requesting admin, continue as normal user
+                print(f"Error requesting admin privileges: {e}")
+                print("Continuing as normal user.")
+    except Exception as e:
+        # If config loading fails, continue anyway
+        print(f"Error loading config: {e}")
+        print("Continuing with default settings.")
+        # Don't exit - always allow app to run
     
     # Enable High DPI scaling
     QApplication.setHighDpiScaleFactorRoundingPolicy(
@@ -91,7 +128,7 @@ def main():
         from src import __version__
     except ImportError:
         __version__ = "1.0.0"
-    app.setApplicationName("Starter App Launcher")
+    app.setApplicationName("Starter App Launcher (Beta)")
     app.setApplicationVersion(__version__)
     app.setOrganizationName("StarterAppLauncher")
     
@@ -118,8 +155,11 @@ def main():
         icon = QIcon(str(icon_path))
         app.setWindowIcon(icon)
     
+    # Check if app was started from Windows boot (via --startup argument)
+    is_startup_launch = "--startup" in sys.argv
+    
     # Create and show main window
-    window = MainWindow(config_store, translator, icon_path if icon_path.exists() else None)
+    window = MainWindow(config_store, translator, icon_path if icon_path.exists() else None, is_startup_launch)
     window.show()
     
     sys.exit(app.exec())

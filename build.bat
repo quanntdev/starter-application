@@ -11,6 +11,8 @@ if exist build rmdir /s /q build
 if exist dist rmdir /s /q dist
 
 REM Build with PyInstaller using spec file
+REM Add src to PYTHONPATH so PyInstaller can find modules
+set PYTHONPATH=%CD%\src;%PYTHONPATH%
 pyinstaller --clean StarterAppLauncher.spec
 
 if %ERRORLEVEL% EQU 0 (

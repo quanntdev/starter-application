@@ -1,6 +1,7 @@
 """Launcher service for starting apps and URLs."""
 import os
 import subprocess
+import ctypes
 from pathlib import Path
 
 
@@ -41,9 +42,39 @@ class LauncherService:
             print(f"Error resolving .lnk file {lnk_path}: {e}")
             return lnk_path
     
+    def _launch_with_normal_user(self, target_path: str) -> bool:
+        """
+        Launch a file/app with normal user privileges using Windows ShellExecute.
+        This ensures the app runs with the current user's token, not admin.
+        
+        Args:
+            target_path: Path to file or executable to launch
+            
+        Returns:
+            True if successful, False otherwise
+        """
+        try:
+            # Use ShellExecuteW with "open" operation (not "runas")
+            # This ensures the app runs with normal user privileges
+            result = ctypes.windll.shell32.ShellExecuteW(
+                None,           # hwnd
+                "open",         # lpOperation - open (not runas)
+                target_path,    # lpFile
+                None,           # lpParameters
+                None,           # lpDirectory
+                1               # nShowCmd - SW_SHOWNORMAL
+            )
+            # ShellExecuteW returns > 32 on success
+            return result > 32
+        except Exception as e:
+            print(f"Error launching with ShellExecute: {e}")
+            return False
+    
     def launch_app(self, lnk_path: str):
         """
-        Launch an app from .lnk file.
+        Launch an app from .lnk file with normal user privileges (not admin).
+        Uses Windows ShellExecute API to ensure the app runs with normal user privileges,
+        preventing inheritance of admin privileges from parent process.
         
         Args:
             lnk_path: Path to the .lnk shortcut file
@@ -58,18 +89,34 @@ class LauncherService:
                 resolved = self._resolve_lnk(lnk_path)
                 if resolved != lnk_path and os.path.exists(resolved):
                     print(f"Resolved path exists, trying to launch: {resolved}")
-                    try:
-                        os.startfile(resolved)
+                    # Use ShellExecute to launch with normal user privileges
+                    if self._launch_with_normal_user(resolved):
+                        print(f"Successfully launched resolved path: {resolved}")
                         return True
-                    except Exception as e:
-                        print(f"Error launching resolved path: {e}")
+                    else:
+                        # Fallback: try os.startfile
+                        try:
+                            os.startfile(resolved)
+                            return True
+                        except Exception as e2:
+                            print(f"Fallback also failed: {e2}")
                 return False
             
-            # Use os.startfile on Windows to open .lnk files
+            # Use ShellExecute to launch .lnk file with normal user privileges
+            # ShellExecute with "open" operation runs with current user token, not admin
             print(f"Launching .lnk file: {lnk_path}")
-            os.startfile(lnk_path)
-            print(f"Successfully launched: {lnk_path}")
-            return True
+            if self._launch_with_normal_user(lnk_path):
+                print(f"Successfully launched: {lnk_path}")
+                return True
+            else:
+                # Fallback: try os.startfile
+                try:
+                    os.startfile(lnk_path)
+                    print(f"Launched via os.startfile: {lnk_path}")
+                    return True
+                except Exception as e:
+                    print(f"os.startfile also failed: {e}")
+                    return False
         except Exception as e:
             print(f"Error launching app {lnk_path}: {e}")
             import traceback
@@ -81,8 +128,21 @@ class LauncherService:
                 exe_path = self._resolve_lnk(lnk_path)
                 if exe_path != lnk_path and os.path.exists(exe_path):
                     print(f"Launching resolved executable: {exe_path}")
-                    os.startfile(exe_path)
-                    return True
+                    # Try ShellExecute first
+                    if self._launch_with_normal_user(exe_path):
+                        return True
+                    # If ShellExecute fails, try os.startfile
+                    try:
+                        os.startfile(exe_path)
+                        return True
+                    except:
+                        # Last resort: subprocess
+                        subprocess.Popen(
+                            [exe_path],
+                            shell=True,
+                            creationflags=subprocess.CREATE_NO_WINDOW
+                        )
+                        return True
             except Exception as e2:
                 print(f"Fallback also failed: {e2}")
             
@@ -107,18 +167,28 @@ class LauncherService:
             if not os.path.exists(exe_path) or not (exe_path.lower().endswith('.exe') or exe_path.lower().endswith('.lnk')):
                 print(f"Resolved path invalid: {exe_path}, trying direct launch")
                 # Try launching browser first, then URLs
+                # Use shell=True to ensure normal user privileges
                 try:
-                    os.startfile(browser_lnk)
+                    subprocess.Popen(
+                        [browser_lnk],
+                        shell=True,
+                        creationflags=subprocess.CREATE_NO_WINDOW
+                    )
                     import time
                     time.sleep(0.3)  # Wait for browser to start
                 except Exception as e:
                     print(f"Error launching browser: {e}")
                 
                 # Open URLs - browser should handle them
+                # Use shell=True to ensure normal user privileges
                 success_count = 0
                 for url in urls:
                     try:
-                        os.startfile(url)
+                        subprocess.Popen(
+                            [url],
+                            shell=True,
+                            creationflags=subprocess.CREATE_NO_WINDOW
+                        )
                         success_count += 1
                         time.sleep(0.1)  # Small delay between URLs
                     except Exception as e:
@@ -127,14 +197,16 @@ class LauncherService:
             
             # Launch browser with URLs
             # Strategy: Launch browser first, then open URLs
+            # Use os.startfile() and subprocess to ensure normal user privileges (not admin)
             import time
             
             # First, launch browser (if not already running, this will start it)
             try:
                 # Launch browser with first URL to ensure it starts
+                # Use subprocess with shell=True to ensure normal user privileges
                 subprocess.Popen(
                     [exe_path, urls[0]],
-                    shell=False,
+                    shell=True,
                     creationflags=subprocess.CREATE_NO_WINDOW
                 )
                 success_count = 1
@@ -144,15 +216,16 @@ class LauncherService:
                 for url in urls[1:]:
                     try:
                         # For subsequent URLs, pass as argument to browser
+                        # Use subprocess with shell=True to ensure normal user privileges
                         subprocess.Popen(
                             [exe_path, url],
-                            shell=False,
+                            shell=True,
                             creationflags=subprocess.CREATE_NO_WINDOW
                         )
                         success_count += 1
                         time.sleep(0.1)  # Small delay between URLs
                     except Exception as e:
-                        # Fallback: try using os.startfile with URL directly
+                        # Fallback: try using os.startfile for URL
                         try:
                             print(f"Trying fallback for URL {url}: {e}")
                             os.startfile(url)
@@ -163,14 +236,22 @@ class LauncherService:
                 # If launching with exe fails, try fallback
                 print(f"Error launching browser with exe: {e}")
                 try:
-                    # Launch browser first
-                    os.startfile(browser_lnk)
+                    # Launch browser first with shell=True
+                    subprocess.Popen(
+                        [browser_lnk],
+                        shell=True,
+                        creationflags=subprocess.CREATE_NO_WINDOW
+                    )
                     time.sleep(0.3)
                     # Then open URLs
                     success_count = 0
                     for url in urls:
                         try:
-                            os.startfile(url)
+                            subprocess.Popen(
+                                [url],
+                                shell=True,
+                                creationflags=subprocess.CREATE_NO_WINDOW
+                            )
                             success_count += 1
                             time.sleep(0.1)
                         except Exception as e2:
@@ -182,12 +263,16 @@ class LauncherService:
             return success_count > 0
         except Exception as e:
             print(f"Error launching browser URLs: {e}")
-            # Final fallback: try opening URLs directly
+            # Final fallback: try opening URLs directly with shell=True
             try:
                 success_count = 0
                 for url in urls:
                     try:
-                        os.startfile(url)
+                        subprocess.Popen(
+                            [url],
+                            shell=True,
+                            creationflags=subprocess.CREATE_NO_WINDOW
+                        )
                         success_count += 1
                         import time
                         time.sleep(0.1)

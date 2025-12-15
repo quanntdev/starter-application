@@ -10,10 +10,11 @@ from ui.tabs.settings_tab import SettingsTab
 class StarterPage(QWidget):
     """Starter App main page with tabs."""
     
-    def __init__(self, config_store, translator, parent=None):
+    def __init__(self, config_store, translator, parent=None, is_startup_launch=False):
         super().__init__(parent)
         self.config_store = config_store
         self.translator = translator
+        self.is_startup_launch = is_startup_launch
         self.init_ui()
     
     def init_ui(self):
@@ -28,7 +29,7 @@ class StarterPage(QWidget):
         self.startup_status_tab = StartupStatusTab(self.config_store, self.translator)
         self.favourite_tab = FavouriteTab(self.config_store, self.translator)
         self.all_apps_tab = AllAppsTab(self.config_store, self.translator)
-        self.settings_tab = SettingsTab(self.config_store, self.translator)
+        self.settings_tab = SettingsTab(self.config_store, self.translator, is_startup_launch=self.is_startup_launch)
         
         # Connect all_apps_tab to favourite_tab for refresh
         self.all_apps_tab.favourite_added.connect(self.on_favourite_added)

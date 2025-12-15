@@ -11,8 +11,14 @@ class ConfigStore:
     """Store for application configuration with atomic save."""
     
     def __init__(self):
-        self.config_dir = Path(os.getenv("APPDATA")) / "StarterAppLauncher"
-        self.config_file = self.config_dir / "config.json"
+        # Use absolute path to ensure config persists across app rebuilds
+        # APPDATA is a user-specific directory that doesn't change with app location
+        appdata = os.getenv("APPDATA")
+        if not appdata:
+            # Fallback to user home directory if APPDATA is not set
+            appdata = os.path.expanduser("~")
+        self.config_dir = Path(appdata).resolve() / "StarterAppLauncher"
+        self.config_file = self.config_dir.resolve() / "config.json"
         self.config: Optional[AppConfig] = None
     
     def load(self):

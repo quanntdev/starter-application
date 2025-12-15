@@ -14,16 +14,18 @@ from models.config_models import StarterSettings
 class SettingsTab(QWidget):
     """Settings tab with trigger and delay options."""
     
-    def __init__(self, config_store, translator, parent=None):
+    def __init__(self, config_store, translator, parent=None, is_startup_launch=False):
         super().__init__(parent)
         self.config_store = config_store
         self.translator = translator
         self.launcher = LauncherService()
         self.startup_processed = False
+        self.is_startup_launch = is_startup_launch
         self.init_ui()
         self.load_settings()
         
         # Check if we should trigger on startup (delayed)
+        # Only trigger if app was started from Windows boot, not manually
         QTimer.singleShot(1000, self.check_startup_trigger)
     
     def init_ui(self):
@@ -105,14 +107,36 @@ class SettingsTab(QWidget):
             self.translator.t("common.messages.saved")
         )
     
+    def _is_windows_boot_recent(self) -> bool:
+        """
+        Check if app was started from Windows boot (not manually).
+        
+        Returns:
+            True if app was started from Windows boot, False otherwise
+        """
+        # Check if app was started with --startup argument
+        if self.is_startup_launch:
+            print("App was started from Windows boot (--startup argument detected)")
+            return True
+        
+        print("App was not started from Windows boot (no --startup argument)")
+        return False
+    
     def check_startup_trigger(self):
-        """Check if we should launch selected favourites on startup."""
+        """Check if we should launch selected favourites on startup.
+        Only triggers if app was started from Windows boot, not manually opened.
+        """
         print("=" * 60)
         print("check_startup_trigger() called")
         print("=" * 60)
         
         if self.startup_processed:
             print("Startup already processed, skipping...")
+            return
+        
+        # Check if app was started from Windows boot (not manually)
+        if not self._is_windows_boot_recent():
+            print("App was not started from Windows boot, skipping auto-launch...")
             return
         
         settings = self.config_store.get_starter_settings()
