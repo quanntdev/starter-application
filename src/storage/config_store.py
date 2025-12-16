@@ -75,6 +75,7 @@ class ConfigStore:
                 }
                 for fav in config.favourites
             ],
+            "email_registered": config.email_registered,
         }
     
     def _deserialize(self, data: dict) -> AppConfig:
@@ -93,12 +94,13 @@ class ConfigStore:
             admin=admin,
             starter_settings=starter_settings,
             favourites=favourites,
+            email_registered=data.get("email_registered", False),
         )
     
     # Convenience methods
     def get_language(self) -> str:
         """Get current language."""
-        return self.config.ui.language if self.config else "vi"
+        return self.config.ui.language if self.config else "en"  # Default changed to English
     
     def set_language(self, language: str):
         """Set language and save."""
@@ -161,5 +163,15 @@ class ConfigStore:
         """Set require admin preference and save."""
         if self.config:
             self.config.admin.require_admin = required
+            self.save()
+    
+    def is_email_registered(self) -> bool:
+        """Check if email is registered."""
+        return self.config.email_registered if self.config else False
+    
+    def set_email_registered(self, registered: bool):
+        """Set email registration status and save."""
+        if self.config:
+            self.config.email_registered = registered
             self.save()
 

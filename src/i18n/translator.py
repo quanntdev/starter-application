@@ -8,7 +8,7 @@ class Translator:
     """Translator with language support for vi/en/ru."""
     
     def __init__(self):
-        self.current_language = "vi"
+        self.current_language = "en"  # Default language changed to English
         self.translations: Dict[str, Dict[str, str]] = {}
         self.load_locales()
     

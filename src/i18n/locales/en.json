@@ -94,6 +94,18 @@
   "common.actions.delete": "Delete",
   "common.messages.saved": "Saved!",
   "common.messages.url_invalid": "URL must start with http:// or https://",
-  "common.messages.duplicate": "Already in favourites: {name}"
+  "common.messages.duplicate": "Already in favourites: {name}",
+
+  "email_registration.title": "Register to continue using the application",
+  "email_registration.description": "To use the application, you need to enter your email.\n\nEmail will be used to:\n• Notify you when there are new updates\n• Send important information related to the application\n\nWe promise not to spam and not to share your email.",
+  "email_registration.email_label": "Email:",
+  "email_registration.email_placeholder": "Enter your email (e.g., example@email.com)",
+  "email_registration.submit_button": "Register & Continue",
+  "email_registration.error_required": "Please enter your email",
+  "email_registration.error_invalid": "Please enter a valid email format (e.g., example@email.com)",
+  "email_registration.submitting": "Submitting...",
+  "email_registration.success": "✓ Registration successful! Unlocking application...",
+  "email_registration.error_network": "Network error: {error}",
+  "email_registration.error_generic": "Error: {error}\nPlease try again."
 }
 

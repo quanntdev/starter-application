@@ -150,7 +150,7 @@ class LauncherService:
     
     def launch_browser_urls(self, browser_lnk: str, urls: list):
         """
-        Launch browser with multiple URLs.
+        Launch browser with multiple URLs, opening each URL in a new tab.
         
         Args:
             browser_lnk: Path to browser .lnk file
@@ -160,128 +160,98 @@ class LauncherService:
             return False
         
         try:
+            import time
+            
+            print(f"Launching browser with {len(urls)} URLs: {urls}")
+            
+            # Strategy: Launch browser with first URL, then open remaining URLs using ShellExecuteW
+            # ShellExecuteW with "open" verb will open each URL in a new tab of the running browser
+            
+            # Step 1: Launch browser with first URL to ensure it starts
             # Resolve .lnk file to get executable path
             exe_path = self._resolve_lnk(browser_lnk)
             
-            # Check if resolved path exists and is an executable
-            if not os.path.exists(exe_path) or not (exe_path.lower().endswith('.exe') or exe_path.lower().endswith('.lnk')):
-                print(f"Resolved path invalid: {exe_path}, trying direct launch")
-                # Try launching browser first, then URLs
-                # Use shell=True to ensure normal user privileges
-                try:
-                    subprocess.Popen(
-                        [browser_lnk],
-                        shell=True,
-                        creationflags=subprocess.CREATE_NO_WINDOW
-                    )
-                    import time
-                    time.sleep(0.3)  # Wait for browser to start
-                except Exception as e:
-                    print(f"Error launching browser: {e}")
-                
-                # Open URLs - browser should handle them
-                # Use shell=True to ensure normal user privileges
-                success_count = 0
-                for url in urls:
-                    try:
-                        subprocess.Popen(
-                            [url],
-                            shell=True,
-                            creationflags=subprocess.CREATE_NO_WINDOW
-                        )
-                        success_count += 1
-                        time.sleep(0.1)  # Small delay between URLs
-                    except Exception as e:
-                        print(f"Error opening URL {url}: {e}")
-                return success_count > 0
+            print(f"Resolved browser path: {exe_path}")
             
-            # Launch browser with URLs
-            # Strategy: Launch browser first, then open URLs
-            # Use os.startfile() and subprocess to ensure normal user privileges (not admin)
-            import time
-            
-            # First, launch browser (if not already running, this will start it)
-            try:
-                # Launch browser with first URL to ensure it starts
-                # Use subprocess with shell=True to ensure normal user privileges
-                subprocess.Popen(
-                    [exe_path, urls[0]],
-                    shell=True,
-                    creationflags=subprocess.CREATE_NO_WINDOW
+            # Launch browser with first URL
+            if os.path.exists(exe_path) and exe_path.lower().endswith('.exe'):
+                # Launch browser executable with first URL
+                print(f"Launching browser with first URL: {urls[0]}")
+                result = ctypes.windll.shell32.ShellExecuteW(
+                    None,           # hwnd
+                    "open",         # lpOperation
+                    exe_path,       # lpFile - browser executable
+                    urls[0],        # lpParameters - first URL as argument
+                    None,           # lpDirectory
+                    1               # nShowCmd - SW_SHOWNORMAL
                 )
-                success_count = 1
-                time.sleep(0.3)  # Wait for browser to start
-                
-                # Open remaining URLs
-                for url in urls[1:]:
-                    try:
-                        # For subsequent URLs, pass as argument to browser
-                        # Use subprocess with shell=True to ensure normal user privileges
-                        subprocess.Popen(
-                            [exe_path, url],
-                            shell=True,
-                            creationflags=subprocess.CREATE_NO_WINDOW
-                        )
-                        success_count += 1
-                        time.sleep(0.1)  # Small delay between URLs
-                    except Exception as e:
-                        # Fallback: try using os.startfile for URL
-                        try:
-                            print(f"Trying fallback for URL {url}: {e}")
-                            os.startfile(url)
-                            success_count += 1
-                        except Exception as e2:
-                            print(f"Error launching URL {url}: {e2}")
-            except Exception as e:
-                # If launching with exe fails, try fallback
-                print(f"Error launching browser with exe: {e}")
-                try:
-                    # Launch browser first with shell=True
-                    subprocess.Popen(
-                        [browser_lnk],
-                        shell=True,
-                        creationflags=subprocess.CREATE_NO_WINDOW
+                if result <= 32:
+                    print(f"Failed to launch browser with first URL. Error code: {result}")
+                    # Fallback: try launching .lnk directly
+                    result = ctypes.windll.shell32.ShellExecuteW(
+                        None, "open", browser_lnk, None, None, 1
                     )
-                    time.sleep(0.3)
-                    # Then open URLs
-                    success_count = 0
-                    for url in urls:
-                        try:
-                            subprocess.Popen(
-                                [url],
-                                shell=True,
-                                creationflags=subprocess.CREATE_NO_WINDOW
-                            )
-                            success_count += 1
-                            time.sleep(0.1)
-                        except Exception as e2:
-                            print(f"Error opening URL {url}: {e2}")
-                except Exception as e2:
-                    print(f"Error in fallback: {e2}")
+                    if result <= 32:
+                        print(f"Failed to launch browser .lnk. Error code: {result}")
+                        return False
+            else:
+                # Launch .lnk file directly
+                print(f"Launching browser .lnk: {browser_lnk}")
+                result = ctypes.windll.shell32.ShellExecuteW(
+                    None, "open", browser_lnk, None, None, 1
+                )
+                if result <= 32:
+                    print(f"Failed to launch browser .lnk. Error code: {result}")
                     return False
+                # Open first URL separately
+                print(f"Opening first URL: {urls[0]}")
+                result = ctypes.windll.shell32.ShellExecuteW(
+                    None, "open", urls[0], None, None, 1
+                )
+                if result <= 32:
+                    print(f"Failed to open first URL. Error code: {result}")
             
+            # Wait for browser to fully start before opening additional URLs
+            print("Waiting for browser to start...")
+            time.sleep(1.0)  # Increased delay to ensure browser is ready
+            
+            # Step 2: Open remaining URLs - each will open in a new tab
+            success_count = 1  # First URL already opened
+            for i, url in enumerate(urls[1:], start=2):
+                try:
+                    print(f"Opening URL {i}/{len(urls)}: {url}")
+                    # Use ShellExecuteW with "open" verb - this will open URL in a new tab
+                    result = ctypes.windll.shell32.ShellExecuteW(
+                        None,           # hwnd
+                        "open",         # lpOperation
+                        url,            # lpFile - URL to open
+                        None,           # lpParameters
+                        None,           # lpDirectory
+                        1               # nShowCmd - SW_SHOWNORMAL
+                    )
+                    
+                    if result > 32:
+                        print(f"✅ Successfully opened URL {i}: {url}")
+                        success_count += 1
+                    else:
+                        print(f"❌ Failed to open URL {i}: {url}. Error code: {result}")
+                    
+                    # Small delay between URLs to avoid overwhelming the browser
+                    if i < len(urls):  # Don't delay after the last one
+                        time.sleep(0.3)
+                except Exception as e:
+                    print(f"❌ Error opening URL {url}: {e}")
+                    import traceback
+                    traceback.print_exc()
+            
+            print(f"Successfully opened {success_count}/{len(urls)} URLs")
             return success_count > 0
+            
         except Exception as e:
             print(f"Error launching browser URLs: {e}")
-            # Final fallback: try opening URLs directly with shell=True
-            try:
-                success_count = 0
-                for url in urls:
-                    try:
-                        subprocess.Popen(
-                            [url],
-                            shell=True,
-                            creationflags=subprocess.CREATE_NO_WINDOW
-                        )
-                        success_count += 1
-                        import time
-                        time.sleep(0.1)
-                    except Exception as e2:
-                        print(f"Error in fallback URL launch {url}: {e2}")
-                return success_count > 0
-            except Exception as e2:
-                print(f"Error in fallback URL launch: {e2}")
-                return False
+            import traceback
+            traceback.print_exc()
+            return False
     
     def test_favourite(self, favourite):
         """

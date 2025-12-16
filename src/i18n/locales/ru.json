@@ -94,6 +94,18 @@
   "common.actions.delete": "Удалить",
   "common.messages.saved": "Сохранено!",
   "common.messages.url_invalid": "URL должен начинаться с http:// или https://",
-  "common.messages.duplicate": "Уже в избранном: {name}"
+  "common.messages.duplicate": "Уже в избранном: {name}",
+
+  "email_registration.title": "Зарегистрируйтесь, чтобы продолжить использование приложения",
+  "email_registration.description": "Для использования приложения вам необходимо ввести свой email.\n\nEmail будет использоваться для:\n• Уведомлений о новых обновлениях\n• Отправки важной информации, связанной с приложением\n\nМы обещаем не спамить и не делиться вашим email.",
+  "email_registration.email_label": "Email:",
+  "email_registration.email_placeholder": "Введите ваш email (например, example@email.com)",
+  "email_registration.submit_button": "Зарегистрироваться и продолжить",
+  "email_registration.error_required": "Пожалуйста, введите ваш email",
+  "email_registration.error_invalid": "Пожалуйста, введите правильный формат email (например, example@email.com)",
+  "email_registration.submitting": "Отправка...",
+  "email_registration.success": "✓ Регистрация успешна! Разблокировка приложения...",
+  "email_registration.error_network": "Ошибка сети: {error}",
+  "email_registration.error_generic": "Ошибка: {error}\nПожалуйста, попробуйте снова."
 }
 

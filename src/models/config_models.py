@@ -6,7 +6,7 @@ from typing import List
 @dataclass
 class UIConfig:
     """UI configuration."""
-    language: str = "vi"
+    language: str = "en"  # Default language changed to English
 
 
 @dataclass
@@ -43,4 +43,5 @@ class AppConfig:
     admin: AdminConfig = field(default_factory=AdminConfig)
     starter_settings: StarterSettings = field(default_factory=StarterSettings)
     favourites: List[Favourite] = field(default_factory=list)
+    email_registered: bool = False  # Email registration status
 

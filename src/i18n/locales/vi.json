@@ -94,6 +94,18 @@
   "common.actions.delete": "Xoá",
   "common.messages.saved": "Đã lưu!",
   "common.messages.url_invalid": "URL phải bắt đầu bằng http:// hoặc https://",
-  "common.messages.duplicate": "Đã có trong Favourite: {name}"
+  "common.messages.duplicate": "Đã có trong Favourite: {name}",
+
+  "email_registration.title": "Đăng ký để tiếp tục sử dụng ứng dụng",
+  "email_registration.description": "Để sử dụng ứng dụng, bạn cần nhập email của mình.\n\nEmail sẽ được dùng để:\n• Thông báo khi có bản cập nhật mới\n• Gửi các thông tin quan trọng liên quan đến ứng dụng\n\nChúng tôi cam kết không spam và không chia sẻ email của bạn.",
+  "email_registration.email_label": "Email:",
+  "email_registration.email_placeholder": "Nhập email của bạn (ví dụ: example@email.com)",
+  "email_registration.submit_button": "Đăng ký & Tiếp tục",
+  "email_registration.error_required": "Vui lòng nhập email của bạn",
+  "email_registration.error_invalid": "Vui lòng nhập đúng định dạng email (ví dụ: example@email.com)",
+  "email_registration.submitting": "Đang gửi...",
+  "email_registration.success": "✅ Đăng ký thành công! Đang mở khóa ứng dụng...",
+  "email_registration.error_network": "Lỗi mạng: {error}",
+  "email_registration.error_generic": "Lỗi: {error}\nVui lòng thử lại."
 }
 

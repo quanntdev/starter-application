@@ -38,14 +38,14 @@ except Exception as e:
         'ui.tabs', 'ui.tabs.startup_status_tab', 'ui.tabs.favourite_tab',
         'ui.tabs.all_apps_tab', 'ui.tabs.settings_tab', 'ui.tabs.languages_tab',
         'ui.tabs.trigger_tab', 'ui.tabs.rules_tab',
-        'ui.components', 'ui.components.dialogs'
+        'ui.components', 'ui.components.dialogs', 'ui.components.email_registration_dialog'
     ]
     i18n_modules = ['i18n', 'i18n.translator']
     storage_modules = ['storage', 'storage.config_store']
     services_modules = [
         'services', 'services.system_metrics_service', 'services.startup_monitor_service',
         'services.discovery_service', 'services.launcher_service',
-        'services.startup_service', 'services.url_service'
+        'services.startup_service', 'services.url_service', 'services.email_registration_service'
     ]
     models_modules = ['models', 'models.config_models']
     utils_modules = ['utils', 'utils.paths']
@@ -88,6 +88,8 @@ a = Analysis(
         'services.launcher_service',
         'services.startup_service',
         'services.url_service',
+        'services.email_registration_service',
+        'ui.components.email_registration_dialog',
         'models.config_models',
         'utils.paths',
         'PySide6.QtCore',

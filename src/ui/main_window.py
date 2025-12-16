@@ -4,8 +4,8 @@ from PySide6.QtWidgets import (
     QMainWindow, QWidget, QHBoxLayout, QVBoxLayout,
     QPushButton, QLabel, QStackedWidget
 )
-from PySide6.QtCore import Qt, Signal
-from PySide6.QtGui import QIcon, QPixmap
+from PySide6.QtCore import Qt, Signal, QTimer, QThread
+from PySide6.QtGui import QIcon, QPixmap, QPainter, QColor
 import qtawesome as qta
 
 from ui.theme import apply_theme
@@ -13,6 +13,8 @@ from ui.pages.starter_page import StarterPage
 from ui.pages.dashboard_page import DashboardPage
 from ui.pages.admin_page import AdminPage
 from ui.pages.coming_soon_page import ComingSoonPage
+from ui.components.email_registration_dialog import EmailRegistrationDialog
+from services.email_registration_service import EmailRegistrationService
 try:
     from src import __version__
 except ImportError:
@@ -124,6 +126,36 @@ class Sidebar(QWidget):
         self.menu_buttons["admin"].setText("  " + self.translator.t("sidebar.admin_settings"))
 
 
+class BlurOverlay(QWidget):
+    """Overlay widget to blur and disable interaction with background."""
+    
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents, False)
+        self.setStyleSheet("background-color: rgba(0, 0, 0, 0.7);")
+    
+    def paintEvent(self, event):
+        """Paint blur effect."""
+        painter = QPainter(self)
+        painter.fillRect(self.rect(), QColor(0, 0, 0, 200))  # Semi-transparent black
+
+
+class EmailSubmissionThread(QThread):
+    """Thread for submitting email to avoid blocking UI."""
+    
+    finished = Signal(bool, str)  # success, error_message
+    
+    def __init__(self, email: str, service: EmailRegistrationService):
+        super().__init__()
+        self.email = email
+        self.service = service
+    
+    def run(self):
+        """Run email submission in background."""
+        success, error_msg = self.service.submit_email(self.email)
+        self.finished.emit(success, error_msg or "")
+
+
 class MainWindow(QMainWindow):
     """Main application window."""
     
@@ -132,6 +164,7 @@ class MainWindow(QMainWindow):
         self.config_store = config_store
         self.translator = translator
         self.is_startup_launch = is_startup_launch
+        self.email_service = EmailRegistrationService()
         
         self.setWindowTitle("Starter App Launcher (Beta)")
         self.setMinimumSize(1200, 800)
@@ -144,6 +177,9 @@ class MainWindow(QMainWindow):
         apply_theme(self)
         
         self.init_ui()
+        
+        # Check email registration after UI is initialized
+        QTimer.singleShot(100, self.check_email_registration)
     
     def init_ui(self):
         """Initialize main window UI."""
@@ -192,6 +228,67 @@ class MainWindow(QMainWindow):
             self.content_stack.setCurrentWidget(self.admin_page)
         elif menu_key.startswith("soon_"):
             self.content_stack.setCurrentWidget(self.coming_soon_page)
+    
+    def check_email_registration(self):
+        """Check if email is registered, show dialog if not."""
+        if not self.config_store.is_email_registered():
+            self.show_email_registration_dialog()
+    
+    def show_email_registration_dialog(self):
+        """Show blocking email registration dialog."""
+        # Create blur overlay
+        self.blur_overlay = BlurOverlay(self)
+        self.blur_overlay.setGeometry(self.rect())
+        self.blur_overlay.show()
+        
+        # Create and show email registration dialog
+        self.email_dialog = EmailRegistrationDialog(self.translator, self)
+        self.email_dialog.email_submitted.connect(self.on_email_submitted)
+        self.email_dialog.show()
+        
+        # Center dialog
+        dialog_rect = self.email_dialog.geometry()
+        dialog_rect.moveCenter(self.geometry().center())
+        self.email_dialog.setGeometry(dialog_rect)
+    
+    def on_email_submitted(self, email: str):
+        """Handle email submission."""
+        # Show loading in dialog
+        self.email_dialog.show_success()
+        
+        # Submit email in background thread
+        self.email_thread = EmailSubmissionThread(email, self.email_service)
+        self.email_thread.finished.connect(lambda success, error: self.on_email_submission_finished(success, error, email))
+        self.email_thread.start()
+    
+    def on_email_submission_finished(self, success: bool, error_message: str, email: str):
+        """Handle email submission result."""
+        if success:
+            # Save registration status
+            self.config_store.set_email_registered(True)
+            
+            # Close dialog and remove overlay
+            self.email_dialog.close()
+            self.blur_overlay.hide()
+            self.blur_overlay.deleteLater()
+            self.email_dialog.deleteLater()
+            
+            print(f"Email registration successful: {email}")
+        else:
+            # Show error and allow retry
+            self.email_dialog.show_error(error_message)
+            print(f"Email registration failed: {error_message}")
+    
+    def resizeEvent(self, event):
+        """Handle window resize to update overlay position."""
+        super().resizeEvent(event)
+        if hasattr(self, 'blur_overlay') and self.blur_overlay:
+            self.blur_overlay.setGeometry(self.rect())
+        if hasattr(self, 'email_dialog') and self.email_dialog:
+            # Keep dialog centered
+            dialog_rect = self.email_dialog.geometry()
+            dialog_rect.moveCenter(self.geometry().center())
+            self.email_dialog.setGeometry(dialog_rect)
     
     def refresh_ui(self):
         """Refresh all UI elements after language change."""
