@@ -38,7 +38,7 @@ except Exception as e:
         'ui.tabs', 'ui.tabs.startup_status_tab', 'ui.tabs.favourite_tab',
         'ui.tabs.all_apps_tab', 'ui.tabs.settings_tab', 'ui.tabs.languages_tab',
         'ui.tabs.trigger_tab', 'ui.tabs.rules_tab',
-        'ui.components', 'ui.components.dialogs', 'ui.components.email_registration_dialog'
+        'ui.components', 'ui.components.dialogs', 'ui.components.email_registration_dialog', 'ui.components.system_card'
     ]
     i18n_modules = ['i18n', 'i18n.translator']
     storage_modules = ['storage', 'storage.config_store']
@@ -66,6 +66,16 @@ a = Analysis(
         *services_modules,
         *models_modules,
         *utils_modules,
+        # Explicit package imports (ensure __init__.py files are included)
+        'ui',
+        'ui.pages',
+        'ui.tabs',
+        'ui.components',
+        'i18n',
+        'storage',
+        'services',
+        'models',
+        'utils',
         # Explicit imports
         'ui.main_window',
         'ui.pages.dashboard_page',
@@ -90,6 +100,7 @@ a = Analysis(
         'services.url_service',
         'services.email_registration_service',
         'ui.components.email_registration_dialog',
+        'ui.components.system_card',
         'models.config_models',
         'utils.paths',
         'PySide6.QtCore',
@@ -102,11 +113,16 @@ a = Analysis(
     hooksconfig={},
     runtime_hooks=['pyi_rth_src_path.py'],
     excludes=[],
-    noarchive=False,
+    noarchive=True,  # Extract modules to filesystem instead of bundling in PYZ
     optimize=0,
 )
 # Include all collected modules in the archive
+# Ensure all pure Python modules are included
 pyz = PYZ(a.pure, a.zipped_data, cipher=block_cipher)
+
+# Debug: Print what's in the PYZ archive
+print(f"PYZ archive contains {len(a.pure)} pure Python modules")
+print(f"First 20 modules: {list(a.pure)[:20]}")
 
 exe = EXE(
     pyz,

@@ -1,88 +1,21 @@
-"""Dashboard page with system metrics charts and running applications."""
+"""Dashboard page with system snapshot cards."""
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton,
-    QScrollArea, QMessageBox, QSplitter
+    QGridLayout
 )
 from PySide6.QtCore import Qt, QThread, Signal, QTimer
 from PySide6.QtGui import QPainter, QColor, QPen, QFont, QTransform, QPixmap
 import qtawesome as qta
 from datetime import datetime
 
-from services.system_metrics_service import SystemMetricsService, RunningAppInfo
-
-
-class LoadingOverlay(QWidget):
-    """Full-screen loading overlay with spinning icon."""
-    
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents, False)
-        self.rotation_angle = 0
-        self.init_ui()
-        self.start_animation()
-    
-    def init_ui(self):
-        """Initialize overlay UI."""
-        self.setStyleSheet("""
-            QWidget {
-                background-color: rgba(30, 30, 30, 200);
-            }
-        """)
-        
-        layout = QVBoxLayout(self)
-        layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        
-        # Spinner icon
-        self.spinner_label = QLabel()
-        self.spinner_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.spinner_label.setFixedSize(64, 64)
-        layout.addWidget(self.spinner_label)
-        
-        # Loading text
-        text_label = QLabel("Loading...")
-        text_label.setStyleSheet("color: #e0e0e0; font-size: 16px; margin-top: 20px;")
-        text_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        layout.addWidget(text_label)
-        
-        # Store base pixmap
-        icon = qta.icon('fa5s.spinner', color='#0d6efd')
-        self.base_pixmap = icon.pixmap(48, 48)
-    
-    def start_animation(self):
-        """Start rotation animation."""
-        self.timer = QTimer()
-        self.timer.timeout.connect(self.rotate_icon)
-        self.timer.start(50)  # Update every 50ms for smooth rotation
-    
-    def rotate_icon(self):
-        """Rotate icon by updating pixmap."""
-        self.rotation_angle = (self.rotation_angle + 15) % 360
-        
-        # Create transform and rotate
-        transform = QTransform()
-        transform.rotate(self.rotation_angle)
-        rotated_pixmap = self.base_pixmap.transformed(transform, Qt.TransformationMode.SmoothTransformation)
-        
-        # Center the rotated pixmap
-        final_pixmap = QPixmap(64, 64)
-        final_pixmap.fill(Qt.GlobalColor.transparent)
-        
-        p = QPainter(final_pixmap)
-        p.setRenderHint(QPainter.RenderHint.Antialiasing)
-        p.drawPixmap(
-            (64 - rotated_pixmap.width()) // 2,
-            (64 - rotated_pixmap.height()) // 2,
-            rotated_pixmap
-        )
-        p.end()
-        
-        self.spinner_label.setPixmap(final_pixmap)
+from services.system_metrics_service import SystemMetricsService
+from ui.components.system_card import SystemCardWidget, SkeletonCardWidget
 
 
 class MetricsWorker(QThread):
     """Worker thread for loading metrics data."""
     
-    finished = Signal(list, dict)  # Signal with (history, current_metrics)
+    finished = Signal(dict)  # Signal with current_metrics
     
     def __init__(self, metrics_service):
         super().__init__()
@@ -90,414 +23,331 @@ class MetricsWorker(QThread):
     
     def run(self):
         """Run the data collection in background."""
-        self.metrics_service.update_metrics_history()
-        history = self.metrics_service.get_metrics_history(60)
         current = self.metrics_service.get_current_metrics()
-        self.finished.emit(history, current)
-
-
-class RunningAppsWorker(QThread):
-    """Worker thread for loading running apps."""
-    
-    finished = Signal(list)  # Signal with apps list
-    
-    def __init__(self, metrics_service):
-        super().__init__()
-        self.metrics_service = metrics_service
-    
-    def run(self):
-        """Run the data collection in background."""
-        apps = self.metrics_service.get_running_windows()
-        self.finished.emit(apps)
-
-
-class MetricsChartWidget(QWidget):
-    """Widget to display CPU and RAM metrics as line charts."""
-    
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.history = []
-        self.setMinimumHeight(300)
-        self.setStyleSheet("background-color: #1e1e1e; border-radius: 8px;")
-    
-    def set_data(self, history):
-        """Set metrics history data."""
-        self.history = history
-        self.update()
-    
-    def paintEvent(self, event):
-        """Paint the charts."""
-        super().paintEvent(event)
+        disk = self.metrics_service.get_disk_metrics()
+        network = self.metrics_service.get_network_metrics()
+        battery = self.metrics_service.get_battery_metrics()
+        system_info = self.metrics_service.get_system_info()
         
-        if not self.history:
-            painter = QPainter(self)
-            painter.setPen(QColor("#a0a0a0"))
-            painter.setFont(QFont("Arial", 12))
-            painter.drawText(self.rect(), Qt.AlignmentFlag.AlignCenter, "Loading data...")
-            return
-        
-        painter = QPainter(self)
-        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-        
-        # Calculate drawing area
-        margin = 50
-        width = self.width() - 2 * margin
-        height = self.height() - 2 * margin
-        
-        # Draw background grid
-        painter.setPen(QPen(QColor("#2d2d2d"), 1))
-        for i in range(5):
-            y = margin + (height * i / 4)
-            painter.drawLine(margin, int(y), margin + width, int(y))
-        
-        if len(self.history) < 2:
-            return
-        
-        # Draw CPU line (blue)
-        painter.setPen(QPen(QColor("#0d6efd"), 2))
-        for i in range(len(self.history) - 1):
-            x1 = margin + (width * i / max(len(self.history) - 1, 1))
-            y1 = margin + height - (height * self.history[i]['cpu'] / 100)
-            x2 = margin + (width * (i + 1) / max(len(self.history) - 1, 1))
-            y2 = margin + height - (height * self.history[i + 1]['cpu'] / 100)
-            painter.drawLine(int(x1), int(y1), int(x2), int(y2))
-        
-        # Draw RAM line (green)
-        painter.setPen(QPen(QColor("#198754"), 2))
-        for i in range(len(self.history) - 1):
-            x1 = margin + (width * i / max(len(self.history) - 1, 1))
-            y1 = margin + height - (height * self.history[i]['ram'] / 100)
-            x2 = margin + (width * (i + 1) / max(len(self.history) - 1, 1))
-            y2 = margin + height - (height * self.history[i + 1]['ram'] / 100)
-            painter.drawLine(int(x1), int(y1), int(x2), int(y2))
-        
-        # Draw labels
-        painter.setPen(QColor("#e0e0e0"))
-        painter.setFont(QFont("Arial", 10))
-        
-        # Y-axis labels (percentage)
-        for i in range(5):
-            y = margin + (height * i / 4)
-            label = f"{100 - (i * 25)}%"
-            painter.drawText(5, int(y) + 5, label)
-        
-        # Legend
-        painter.setPen(QColor("#0d6efd"))
-        painter.drawLine(width + margin - 100, 20, width + margin - 70, 20)
-        painter.setPen(QColor("#e0e0e0"))
-        painter.drawText(width + margin - 65, 25, "CPU")
-        
-        painter.setPen(QColor("#198754"))
-        painter.drawLine(width + margin - 100, 40, width + margin - 70, 40)
-        painter.setPen(QColor("#e0e0e0"))
-        painter.drawText(width + margin - 65, 45, "RAM")
-
-
-class RunningAppItemWidget(QWidget):
-    """Widget for a single running application item."""
-    
-    def __init__(self, app_info: RunningAppInfo, on_kill_callback, parent=None):
-        super().__init__(parent)
-        self.app_info = app_info
-        self.on_kill_callback = on_kill_callback
-        self.init_ui()
-    
-    def init_ui(self):
-        """Initialize item UI."""
-        layout = QHBoxLayout(self)
-        layout.setContentsMargins(12, 12, 12, 12)
-        layout.setSpacing(10)
-        
-        # App name
-        name_label = QLabel(self.app_info.name[:50])  # Truncate long names
-        name_label.setStyleSheet("font-weight: 500; font-size: 14px;")
-        name_label.setToolTip(f"{self.app_info.name}\nProcess: {self.app_info.process_name}")
-        layout.addWidget(name_label, 3)
-        
-        # Process name
-        process_label = QLabel(self.app_info.process_name)
-        process_label.setStyleSheet("color: #a0a0a0; font-size: 12px;")
-        layout.addWidget(process_label, 2)
-        
-        # PID
-        pid_label = QLabel(str(self.app_info.pid))
-        pid_label.setStyleSheet("color: #a0a0a0; font-size: 12px;")
-        pid_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        layout.addWidget(pid_label, 1)
-        
-        # Memory
-        memory_text = f"{self.app_info.memory_usage:.1f} MB" if self.app_info.memory_usage else "-"
-        memory_label = QLabel(memory_text)
-        memory_label.setStyleSheet("color: #a0a0a0; font-size: 12px;")
-        memory_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        layout.addWidget(memory_label, 1)
-        
-        # CPU
-        cpu_text = f"{self.app_info.cpu_percent:.1f}%" if self.app_info.cpu_percent else "-"
-        cpu_label = QLabel(cpu_text)
-        cpu_label.setStyleSheet("color: #a0a0a0; font-size: 12px;")
-        cpu_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        layout.addWidget(cpu_label, 1)
-        
-        # Kill button
-        kill_button = QPushButton()
-        kill_button.setIcon(qta.icon('fa5s.times-circle', color='#dc3545'))
-        kill_button.setToolTip(f"Close window\nTerminate {self.app_info.process_name}")
-        kill_button.setCursor(Qt.CursorShape.PointingHandCursor)
-        kill_button.clicked.connect(lambda: self.on_kill_callback(self.app_info.pid, self.app_info.name))
-        kill_button.setStyleSheet("""
-            QPushButton {
-                background-color: transparent;
-                border: none;
-                padding: 4px;
-            }
-            QPushButton:hover {
-                background-color: #3a3a3a;
-                border-radius: 4px;
-            }
-        """)
-        layout.addWidget(kill_button)
+        data = {
+            'current': current,
+            'disk': disk,
+            'network': network,
+            'battery': battery,
+            'system_info': system_info
+        }
+        self.finished.emit(data)
 
 
 class DashboardPage(QWidget):
-    """Dashboard page showing system metrics and running applications."""
+    """Dashboard page showing system snapshot cards."""
     
     def __init__(self, config_store, translator, parent=None):
         super().__init__(parent)
         self.config_store = config_store
         self.translator = translator
         self.metrics_service = SystemMetricsService()
-        self.loading_overlay = None
+        self.is_loading = True
+        self.last_update_time = None
+        
+        # Card widgets
+        self.cpu_card = None
+        self.ram_card = None
+        self.disk_card = None
+        self.uptime_card = None
+        self.network_status_card = None
+        self.download_speed_card = None
+        self.upload_speed_card = None
+        self.battery_card = None
+        
         self.init_ui()
         
-        # Auto-refresh on page load
+        # Auto-refresh timer (2 seconds)
+        self.refresh_timer = QTimer()
+        self.refresh_timer.timeout.connect(self.refresh_data)
+        self.refresh_timer.start(2000)
+        
+        # Initial load
         QTimer.singleShot(100, self.refresh_data)
     
     def init_ui(self):
         """Initialize dashboard UI."""
         layout = QVBoxLayout(self)
         layout.setContentsMargins(20, 20, 20, 20)
+        layout.setSpacing(16)
         
-        # Title and refresh button
+        # Header: Title and refresh button
         header_layout = QHBoxLayout()
         
         self.title_label = QLabel(self.translator.t("dashboard.title"))
-        self.title_label.setStyleSheet("font-size: 20px; font-weight: 600;")
+        self.title_label.setStyleSheet("font-size: 20px; font-weight: 600; color: #e0e0e0;")
         header_layout.addWidget(self.title_label)
         
         header_layout.addStretch()
         
-        # Refresh button
+        # Last update label
+        self.update_label = QLabel("")
+        self.update_label.setStyleSheet("color: #a0a0a0; font-size: 12px;")
+        header_layout.addWidget(self.update_label)
+        
+        header_layout.addSpacing(10)
+        
+        # Refresh button (optional, can be hidden)
         self.refresh_button = QPushButton()
         self.refresh_button.setIcon(qta.icon('fa5s.sync', color='white'))
         self.refresh_button.setToolTip(self.translator.t("dashboard.refresh"))
         self.refresh_button.setCursor(Qt.CursorShape.PointingHandCursor)
         self.refresh_button.setFixedSize(40, 40)
+        self.refresh_button.setStyleSheet("""
+            QPushButton {
+                background-color: transparent;
+                border: none;
+                border-radius: 4px;
+            }
+            QPushButton:hover {
+                background-color: #333333;
+            }
+        """)
         self.refresh_button.clicked.connect(self.refresh_data)
         header_layout.addWidget(self.refresh_button)
         
         layout.addLayout(header_layout)
-        layout.addSpacing(10)
         
-        # Current metrics info
-        self.metrics_info_label = QLabel("")
-        self.metrics_info_label.setStyleSheet("color: #a0a0a0; font-size: 12px;")
-        layout.addWidget(self.metrics_info_label)
+        # Grid layout for cards
+        self.cards_grid = QGridLayout()
+        self.cards_grid.setSpacing(16)
+        self.cards_grid.setContentsMargins(0, 0, 0, 0)
         
-        layout.addSpacing(10)
+        # Create skeleton cards for loading
+        self.create_skeleton_cards()
         
-        # Charts section
-        charts_widget = QWidget()
-        charts_widget.setStyleSheet("background-color: #252525; border-radius: 8px; padding: 20px;")
-        charts_layout = QVBoxLayout(charts_widget)
+        layout.addLayout(self.cards_grid)
+        layout.addStretch()
+    
+    def create_skeleton_cards(self):
+        """Create skeleton loading cards."""
+        # Clear existing cards
+        self.clear_cards()
         
-        chart_title = QLabel(self.translator.t("dashboard.charts.title"))
-        chart_title.setStyleSheet("font-size: 16px; font-weight: 600;")
-        charts_layout.addWidget(chart_title)
+        # Row 1: Core System
+        for i in range(4):
+            skeleton = SkeletonCardWidget()
+            self.cards_grid.addWidget(skeleton, 0, i)
         
-        self.chart_widget = MetricsChartWidget()
-        charts_layout.addWidget(self.chart_widget)
+        # Row 2: Network & Power
+        for i in range(4):
+            skeleton = SkeletonCardWidget()
+            self.cards_grid.addWidget(skeleton, 1, i)
+    
+    def clear_cards(self):
+        """Clear all cards from grid."""
+        while self.cards_grid.count():
+            item = self.cards_grid.takeAt(0)
+            if item.widget():
+                item.widget().deleteLater()
+    
+    def create_cards(self):
+        """Create actual metric cards."""
+        self.clear_cards()
         
-        layout.addWidget(charts_widget)
+        # Row 1: Core System
+        self.cpu_card = SystemCardWidget("CPU", "fa5s.tachometer-alt", self)
+        self.cpu_card.setToolTip("Current CPU usage")
+        self.cards_grid.addWidget(self.cpu_card, 0, 0)
         
-        layout.addSpacing(20)
+        self.ram_card = SystemCardWidget("RAM", "fa5s.database", self)
+        self.ram_card.setToolTip("Memory usage (Used/Total)")
+        self.cards_grid.addWidget(self.ram_card, 0, 1)
         
-        # Running apps section
-        apps_header_layout = QHBoxLayout()
+        self.disk_card = SystemCardWidget("Disk", "fa5s.hdd", self)
+        self.disk_card.setToolTip("System drive usage")
+        self.cards_grid.addWidget(self.disk_card, 0, 2)
         
-        self.apps_title = QLabel(self.translator.t("dashboard.running_apps.title"))
-        self.apps_title.setStyleSheet("font-size: 16px; font-weight: 600;")
-        apps_header_layout.addWidget(self.apps_title)
+        self.uptime_card = SystemCardWidget("Uptime", "fa5s.clock", self)
+        self.uptime_card.setToolTip("System uptime since boot")
+        self.cards_grid.addWidget(self.uptime_card, 0, 3)
         
-        self.apps_count_label = QLabel("")
-        self.apps_count_label.setStyleSheet("color: #a0a0a0; font-size: 12px;")
-        apps_header_layout.addWidget(self.apps_count_label)
+        # Row 2: Network & Power
+        self.network_status_card = SystemCardWidget("Network", "fa5s.wifi", self)
+        self.network_status_card.setToolTip("Network connection status")
+        self.cards_grid.addWidget(self.network_status_card, 1, 0)
         
-        apps_header_layout.addStretch()
+        self.download_speed_card = SystemCardWidget("Download", "fa5s.download", self)
+        self.download_speed_card.setToolTip("Download speed")
+        self.cards_grid.addWidget(self.download_speed_card, 1, 1)
         
-        layout.addLayout(apps_header_layout)
-        layout.addSpacing(10)
+        self.upload_speed_card = SystemCardWidget("Upload", "fa5s.upload", self)
+        self.upload_speed_card.setToolTip("Upload speed")
+        self.cards_grid.addWidget(self.upload_speed_card, 1, 2)
         
-        # Table header
-        header_widget = QWidget()
-        header_widget.setStyleSheet("background-color: #252525; border-radius: 6px; padding: 8px;")
-        header_layout = QHBoxLayout(header_widget)
-        header_layout.setContentsMargins(12, 8, 12, 8)
+        # Battery card (may be hidden if no battery)
+        self.battery_card = SystemCardWidget("Battery", "fa5s.battery-half", self)
+        self.battery_card.setToolTip("Battery status")
+        self.cards_grid.addWidget(self.battery_card, 1, 3)
+    
+    def get_status(self, value: float, thresholds: tuple) -> str:
+        """
+        Get status based on value and thresholds.
         
-        headers = [
-            (self.translator.t("dashboard.running_apps.window_name"), 3),
-            (self.translator.t("dashboard.running_apps.process"), 2),
-            (self.translator.t("dashboard.running_apps.pid"), 1),
-            (self.translator.t("dashboard.running_apps.memory"), 1),
-            (self.translator.t("dashboard.running_apps.cpu"), 1),
-            (self.translator.t("dashboard.running_apps.action"), 0)
-        ]
+        Args:
+            value: The metric value
+            thresholds: (normal_max, warning_max) tuple
         
-        for text, stretch in headers:
-            header_label = QLabel(text)
-            header_label.setStyleSheet("font-weight: 600; color: #e0e0e0;")
-            if text in [self.translator.t("dashboard.running_apps.pid"), 
-                       self.translator.t("dashboard.running_apps.memory"),
-                       self.translator.t("dashboard.running_apps.cpu")]:
-                header_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            if stretch > 0:
-                header_layout.addWidget(header_label, stretch)
+        Returns:
+            'normal', 'warning', or 'critical'
+        """
+        normal_max, warning_max = thresholds
+        if value < normal_max:
+            return "normal"
+        elif value < warning_max:
+            return "warning"
+        else:
+            return "critical"
+    
+    def format_speed(self, bytes_per_sec: float) -> str:
+        """Format network speed."""
+        if bytes_per_sec < 1024:
+            return f"{bytes_per_sec:.1f} B/s"
+        elif bytes_per_sec < 1024 * 1024:
+            return f"{bytes_per_sec / 1024:.2f} KB/s"
+        else:
+            return f"{bytes_per_sec / (1024 * 1024):.2f} MB/s"
+    
+    def update_cards(self, data: dict):
+        """Update all cards with data."""
+        if self.is_loading:
+            self.create_cards()
+            self.is_loading = False
+        
+        current = data['current']
+        disk = data['disk']
+        network = data['network']
+        battery = data['battery']
+        system_info = data['system_info']
+        
+        # CPU Card
+        cpu_value = current['cpu_percent']
+        cpu_status = self.get_status(cpu_value, (60, 80))
+        self.cpu_card.set_value(
+            f"{cpu_value:.1f}%",
+            "Usage",
+            cpu_status
+        )
+        
+        # RAM Card
+        ram_value = current['ram_percent']
+        ram_status = self.get_status(ram_value, (70, 85))
+        ram_subtitle = f"{current['ram_used_gb']:.1f} GB / {current['ram_total_gb']:.1f} GB"
+        self.ram_card.set_value(
+            f"{ram_value:.1f}%",
+            ram_subtitle,
+            ram_status
+        )
+        
+        # Disk Card
+        disk_value = disk['percent_used']
+        disk_status = self.get_status(disk_value, (80, 90))
+        disk_subtitle = f"{disk['used_gb']:.1f} GB / {disk['total_gb']:.1f} GB"
+        self.disk_card.set_value(
+            f"{disk['used_gb']:.1f} GB / {disk['total_gb']:.1f} GB",
+            f"Free: {disk['free_gb']:.1f} GB",
+            disk_status
+        )
+        
+        # Uptime Card
+        self.uptime_card.set_value(
+            system_info['uptime'],
+            "Since boot",
+            "normal"
+        )
+        
+        # Network Status Card
+        if network['is_connected']:
+            network_status = "normal"
+            # Check if weak/slow (download < 100 KB/s for 10s)
+            if network['download_speed_bps'] < 100 * 1024:
+                network_status = "warning"
+            network_value = "Connected"
+            network_subtitle = network['connection_type']
+        else:
+            network_status = "critical"
+            network_value = "Disconnected"
+            network_subtitle = "No connection"
+        
+        self.network_status_card.set_value(
+            network_value,
+            network_subtitle,
+            network_status
+        )
+        
+        # Download Speed Card
+        download_speed = self.format_speed(network['download_speed_bps'])
+        self.download_speed_card.set_value(
+            download_speed,
+            "Download",
+            "normal"
+        )
+        
+        # Upload Speed Card
+        upload_speed = self.format_speed(network['upload_speed_bps'])
+        self.upload_speed_card.set_value(
+            upload_speed,
+            "Upload",
+            "normal"
+        )
+        
+        # Battery Card
+        if battery['has_battery']:
+            battery_value = battery['percent']
+            battery_subtitle = "Charging" if not battery['is_charging'] else "On battery"
+            
+            if battery_value < 10:
+                battery_status = "critical"
+            elif battery_value < 20:
+                battery_status = "warning"
             else:
-                header_layout.addWidget(header_label)
+                battery_status = "normal"
+            
+            self.battery_card.set_value(
+                f"{battery_value:.0f}%",
+                battery_subtitle,
+                battery_status
+            )
+            self.battery_card.show()
+        else:
+            # Hide battery card if no battery
+            self.battery_card.hide()
         
-        layout.addWidget(header_widget)
-        
-        # Scroll area for running apps
-        scroll_area = QScrollArea()
-        scroll_area.setWidgetResizable(True)
-        scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        
-        self.apps_container = QWidget()
-        self.apps_layout = QVBoxLayout(self.apps_container)
-        self.apps_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
-        self.apps_layout.setSpacing(4)
-        self.apps_layout.setContentsMargins(0, 0, 0, 0)
-        
-        scroll_area.setWidget(self.apps_container)
-        layout.addWidget(scroll_area, 1)
+        # Update last update time
+        self.last_update_time = datetime.now()
+        self.update_update_label()
     
-    def show_loading(self):
-        """Show full-screen loading overlay."""
-        if self.loading_overlay is None:
-            self.loading_overlay = LoadingOverlay(self)
-            self.loading_overlay.setGeometry(self.rect())
-        self.loading_overlay.show()
-        self.loading_overlay.raise_()
-    
-    def hide_loading(self):
-        """Hide loading overlay."""
-        if self.loading_overlay:
-            self.loading_overlay.hide()
-    
-    def resizeEvent(self, event):
-        """Handle resize to update loading overlay size."""
-        super().resizeEvent(event)
-        if self.loading_overlay:
-            self.loading_overlay.setGeometry(self.rect())
+    def update_update_label(self):
+        """Update the 'Last update' label."""
+        if self.last_update_time:
+            elapsed = (datetime.now() - self.last_update_time).total_seconds()
+            if elapsed < 60:
+                self.update_label.setText(f"Last update: {int(elapsed)}s ago")
+            else:
+                minutes = int(elapsed / 60)
+                self.update_label.setText(f"Last update: {minutes}m ago")
+        else:
+            self.update_label.setText("")
     
     def refresh_data(self):
         """Refresh dashboard data."""
-        # Show loading overlay
-        self.show_loading()
-        self.refresh_button.setEnabled(False)
-        
-        # Track completion of both workers
-        self.metrics_loaded = False
-        self.apps_loaded = False
-        
-        # Load metrics
+        # Load metrics in background thread
         self.metrics_worker = MetricsWorker(self.metrics_service)
         self.metrics_worker.finished.connect(self.on_metrics_loaded)
         self.metrics_worker.start()
-        
-        # Load running apps
-        self.apps_worker = RunningAppsWorker(self.metrics_service)
-        self.apps_worker.finished.connect(self.on_apps_loaded)
-        self.apps_worker.start()
     
-    def check_all_loaded(self):
-        """Check if all data is loaded and hide loading overlay."""
-        if self.metrics_loaded and self.apps_loaded:
-            self.hide_loading()
-            self.refresh_button.setEnabled(True)
-    
-    def on_metrics_loaded(self, history, current):
+    def on_metrics_loaded(self, data: dict):
         """Handle metrics data loaded."""
-        # Update chart
-        self.chart_widget.set_data(history)
-        
-        # Update info label
-        info_text = f"CPU: {current['cpu_percent']:.1f}% | RAM: {current['ram_percent']:.1f}% ({current['ram_used_gb']:.1f} GB / {current['ram_total_gb']:.1f} GB)"
-        self.metrics_info_label.setText(info_text)
-        
-        self.metrics_loaded = True
-        self.check_all_loaded()
-    
-    def on_apps_loaded(self, apps):
-        """Handle running apps data loaded."""
-        # Clear existing widgets
-        while self.apps_layout.count():
-            item = self.apps_layout.takeAt(0)
-            if item.widget():
-                item.widget().deleteLater()
-        
-        # Update count
-        self.apps_count_label.setText(f"({len(apps)} {self.translator.t('dashboard.running_apps.windows')})")
-        
-        # Add app items
-        if not apps:
-            no_apps_label = QLabel(self.translator.t("dashboard.running_apps.no_windows"))
-            no_apps_label.setStyleSheet("color: #a0a0a0; padding: 20px;")
-            no_apps_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            self.apps_layout.addWidget(no_apps_label)
-        else:
-            for app in apps:
-                item_widget = RunningAppItemWidget(app, self.kill_app)
-                item_widget.setStyleSheet("""
-                    QWidget {
-                        background-color: transparent;
-                        border-radius: 6px;
-                    }
-                    QWidget:hover {
-                        background-color: #2d2d2d;
-                    }
-                """)
-                self.apps_layout.addWidget(item_widget)
-        
-        self.apps_loaded = True
-        self.check_all_loaded()
-    
-    def kill_app(self, pid: int, app_name: str):
-        """Kill an application process."""
-        success = self.metrics_service.kill_process(pid)
-        
-        if success:
-            QMessageBox.information(
-                self,
-                self.translator.t("dashboard.messages.success"),
-                self.translator.t("dashboard.messages.process_killed").format(name=app_name),
-                QMessageBox.StandardButton.Ok
-            )
-            # Refresh after killing
-            QTimer.singleShot(500, self.refresh_data)
-        else:
-            QMessageBox.warning(
-                self,
-                self.translator.t("dashboard.messages.error"),
-                self.translator.t("dashboard.messages.kill_failed").format(name=app_name),
-                QMessageBox.StandardButton.Ok
-            )
+        self.update_cards(data)
     
     def refresh_ui(self):
         """Refresh UI after language change."""
         self.title_label.setText(self.translator.t("dashboard.title"))
         self.refresh_button.setToolTip(self.translator.t("dashboard.refresh"))
-        self.apps_title.setText(self.translator.t("dashboard.running_apps.title"))
         # Refresh data to update all labels
         self.refresh_data()
-

@@ -12,6 +12,7 @@ starter-app-vibe-md/
 # ============================================
 build/
 dist/
+installer_output/
 *.spec.bak
 *.pyc
 *.pyo

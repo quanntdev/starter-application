@@ -38,6 +38,12 @@ class SettingsTab(QWidget):
         self.title_label.setStyleSheet("font-size: 18px; font-weight: 600;")
         layout.addWidget(self.title_label)
         
+        # Description
+        self.description_label = QLabel(self.translator.t("starter_settings.description"))
+        self.description_label.setWordWrap(True)
+        self.description_label.setStyleSheet("font-size: 13px; color: #a0a0a0; margin-top: 8px;")
+        layout.addWidget(self.description_label)
+        
         layout.addSpacing(20)
         
         # Settings card
@@ -60,7 +66,7 @@ class SettingsTab(QWidget):
         delay_layout.addWidget(delay_label)
         
         self.delay_combo = QComboBox()
-        self.delay_combo.addItems(["5", "10", "15", "30", "60"])
+        self.delay_combo.addItems(["1", "2", "3", "4"])
         self.delay_combo.setMaximumWidth(100)
         delay_layout.addWidget(self.delay_combo)
         delay_layout.addStretch()
@@ -198,6 +204,7 @@ class SettingsTab(QWidget):
     def refresh_ui(self):
         """Refresh UI after language change."""
         self.title_label.setText(self.translator.t("starter_settings.title"))
+        self.description_label.setText(self.translator.t("starter_settings.description"))
         self.trigger_checkbox.setText(self.translator.t("starter_settings.trigger_selected"))
         self.save_button.setText("  " + self.translator.t("starter_settings.save"))
 

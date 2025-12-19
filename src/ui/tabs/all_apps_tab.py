@@ -69,6 +69,12 @@ class AllAppsTab(QWidget):
         self.title_label.setStyleSheet("font-size: 18px; font-weight: 600;")
         layout.addWidget(self.title_label)
         
+        # Description
+        self.description_label = QLabel(self.translator.t("all_apps.description"))
+        self.description_label.setWordWrap(True)
+        self.description_label.setStyleSheet("font-size: 13px; color: #a0a0a0; margin-top: 8px;")
+        layout.addWidget(self.description_label)
+        
         layout.addSpacing(10)
         
         # Search input
@@ -191,6 +197,7 @@ class AllAppsTab(QWidget):
     def refresh_ui(self):
         """Refresh UI after language change."""
         self.title_label.setText(self.translator.t("all_apps.title"))
+        self.description_label.setText(self.translator.t("all_apps.description"))
         self.search_input.setPlaceholderText(self.translator.t("all_apps.search_placeholder"))
         self.display_apps()
 

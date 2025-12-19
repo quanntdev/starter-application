@@ -10,7 +10,6 @@ import qtawesome as qta
 
 from ui.theme import apply_theme
 from ui.pages.starter_page import StarterPage
-from ui.pages.dashboard_page import DashboardPage
 from ui.pages.admin_page import AdminPage
 from ui.pages.coming_soon_page import ComingSoonPage
 from ui.components.email_registration_dialog import EmailRegistrationDialog
@@ -76,19 +75,11 @@ class Sidebar(QWidget):
         # Middle section - Menu items
         self.menu_buttons = {}
         
-        # Dashboard button (default page)
-        btn_dashboard = QPushButton("  " + self.translator.t("sidebar.dashboard"))
-        btn_dashboard.setIcon(qta.icon('fa5s.chart-line', color='#e0e0e0'))
-        btn_dashboard.setCheckable(True)
-        btn_dashboard.setChecked(True)
-        btn_dashboard.clicked.connect(lambda: self.menu_changed.emit("dashboard"))
-        self.menu_buttons["dashboard"] = btn_dashboard
-        layout.addWidget(btn_dashboard)
-        
-        # Starter App button
+        # Starter App button (default page)
         btn_starter = QPushButton("  " + self.translator.t("sidebar.starter_app"))
         btn_starter.setIcon(qta.icon('fa5s.mobile-alt', color='#e0e0e0'))
         btn_starter.setCheckable(True)
+        btn_starter.setChecked(True)
         btn_starter.clicked.connect(lambda: self.menu_changed.emit("starter"))
         self.menu_buttons["starter"] = btn_starter
         layout.addWidget(btn_starter)
@@ -120,7 +111,6 @@ class Sidebar(QWidget):
     
     def refresh_ui(self):
         """Refresh UI after language change."""
-        self.menu_buttons["dashboard"].setText("  " + self.translator.t("sidebar.dashboard"))
         self.menu_buttons["starter"].setText("  " + self.translator.t("sidebar.starter_app"))
         self.menu_buttons["soon_0"].setText("  " + self.translator.t("sidebar.coming_soon"))
         self.menu_buttons["admin"].setText("  " + self.translator.t("sidebar.admin_settings"))
@@ -201,18 +191,16 @@ class MainWindow(QMainWindow):
         self.content_stack.setObjectName("content")
         
         # Create pages
-        self.dashboard_page = DashboardPage(self.config_store, self.translator)
         self.starter_page = StarterPage(self.config_store, self.translator, is_startup_launch=self.is_startup_launch)
         self.admin_page = AdminPage(self.config_store, self.translator, self)
         self.coming_soon_page = ComingSoonPage(self.translator)
         
-        self.content_stack.addWidget(self.dashboard_page)
         self.content_stack.addWidget(self.starter_page)
         self.content_stack.addWidget(self.admin_page)
         self.content_stack.addWidget(self.coming_soon_page)
         
-        # Set Dashboard as default page
-        self.content_stack.setCurrentWidget(self.dashboard_page)
+        # Set Starter App as default page
+        self.content_stack.setCurrentWidget(self.starter_page)
         
         main_layout.addWidget(self.content_stack, 1)
     
@@ -222,8 +210,6 @@ class MainWindow(QMainWindow):
         
         if menu_key == "starter":
             self.content_stack.setCurrentWidget(self.starter_page)
-        elif menu_key == "dashboard":
-            self.content_stack.setCurrentWidget(self.dashboard_page)
         elif menu_key == "admin":
             self.content_stack.setCurrentWidget(self.admin_page)
         elif menu_key.startswith("soon_"):

@@ -9,17 +9,22 @@ from PySide6.QtCore import Qt
 from PySide6.QtGui import QIcon
 
 # Add src to path - handle both frozen (PyInstaller) and development mode
+# Note: Runtime hook (pyi_rth_src_path.py) runs BEFORE this code
+# and should have already set up sys.path for frozen executables
 if getattr(sys, 'frozen', False):
     # Running as compiled executable
-    application_path = Path(sys.executable).parent
-    # Add the bundle dir to path
-    bundle_dir = getattr(sys, '_MEIPASS', application_path)
-    sys.path.insert(0, str(bundle_dir))
-    # PyInstaller bundles modules directly in _MEIPASS, not in src subdirectory
+    # Runtime hook should have already added _MEIPASS to sys.path
+    bundle_dir = getattr(sys, '_MEIPASS', None)
+    if bundle_dir and str(bundle_dir) not in sys.path:
+        sys.path.insert(0, str(bundle_dir))
+    # PyInstaller bundles modules directly in _MEIPASS root
     # So modules are accessible as 'ui', 'i18n', etc. directly
 else:
     # Running in development - add src to path
-    sys.path.insert(0, str(Path(__file__).parent.parent))
+    # Get the src directory (parent of app directory)
+    src_dir = Path(__file__).parent.parent.resolve()
+    if str(src_dir) not in sys.path:
+        sys.path.insert(0, str(src_dir))
 
 # Import modules - PyInstaller bundles them without 'src' prefix
 try:
@@ -29,14 +34,31 @@ try:
 except ImportError as e:
     # If import fails, try to debug
     import traceback
-    print(f"Import error: {e}")
-    print(f"sys.path: {sys.path}")
+    import os
+    error_msg = f"Import error: {e}\n"
+    error_msg += f"sys.path: {sys.path}\n"
     if getattr(sys, 'frozen', False):
         bundle_dir = getattr(sys, '_MEIPASS', '')
-        print(f"Bundle dir: {bundle_dir}")
+        error_msg += f"Bundle dir: {bundle_dir}\n"
         if bundle_dir:
-            import os
-            print(f"Files in bundle: {os.listdir(bundle_dir)[:20]}")
+            try:
+                files = os.listdir(bundle_dir)
+                error_msg += f"Files in bundle (first 30): {files[:30]}\n"
+                # Check for ui module
+                ui_path = Path(bundle_dir) / "ui"
+                error_msg += f"ui path exists: {ui_path.exists()}\n"
+                if ui_path.exists():
+                    ui_files = os.listdir(ui_path)
+                    error_msg += f"ui files: {ui_files[:20]}\n"
+            except Exception as ex:
+                error_msg += f"Error listing bundle: {ex}\n"
+    # Write to file for debugging (since console=False)
+    try:
+        with open("import_error.log", "w") as f:
+            f.write(error_msg)
+            traceback.print_exc(file=f)
+    except:
+        pass
     traceback.print_exc()
     raise
 

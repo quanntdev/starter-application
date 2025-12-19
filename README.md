@@ -112,6 +112,17 @@ python src/app/main.py
 
 #### Build Executable
 ```bash
+# Build exe
+.\build.bat
+
+# Build installer (requires Inno Setup - https://jrsoftware.org/isdl.php)
+.\build-installer.bat
+```
+
+Output: `installer_output\StarterAppLauncher-Setup-1.0.0-beta.exe`
+
+#### Build Commands (Alternative)
+```bash
 # Quick build
 build.bat
 

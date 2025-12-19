@@ -28,7 +28,12 @@
   "starter.tabs.all_apps": "Application",
   "starter.tabs.settings": "Settings",
 
+  "startup_status.title": "Startup Status",
+  "startup_status.description": "Xem và quản lý các ứng dụng tự động khởi động cùng Windows. Theo dõi trạng thái và mức sử dụng bộ nhớ.",
+
+  "favourite.title": "Favourite",
   "favourites.title": "Favourite",
+  "favourites.description": "Quản lý các ứng dụng và trình duyệt yêu thích. Chọn mục và dùng 'Run All' để mở tất cả cùng lúc.",
   "favourites.run_all": "Run All",
   "favourites.badge.browser": "Browser",
   "favourites.badge.app": "App",
@@ -44,12 +49,14 @@
   "favourites.right.coming_soon": "Coming soon",
 
   "all_apps.title": "Tất cả app",
+  "all_apps.description": "Khám phá tất cả các ứng dụng đã cài đặt trên hệ thống. Click 'Add' để thêm vào danh sách yêu thích.",
   "all_apps.search_placeholder": "Tìm app...",
   "all_apps.add": "Add",
 
   "starter_settings.title": "Cài đặt",
+  "starter_settings.description": "Cấu hình tự động mở các mục đã chọn khi Windows khởi động. Đặt thời gian trễ để kiểm soát thời điểm mở ứng dụng.",
   "starter_settings.trigger_selected": "Mở tất cả mục đã chọn khi Windows khởi động",
-  "starter_settings.delay_seconds": "Trễ trước khi mở",
+  "starter_settings.delay_seconds": "Trễ trước khi mở (giây)",
   "starter_settings.save": "Lưu",
 
   "admin.title": "Admin settings",

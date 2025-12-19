@@ -309,6 +309,12 @@ class StartupStatusTab(QWidget):
         self.title_label.setStyleSheet("font-size: 18px; font-weight: 600;")
         layout.addWidget(self.title_label)
         
+        # Description
+        self.description_label = QLabel(self.translator.t("startup_status.description"))
+        self.description_label.setWordWrap(True)
+        self.description_label.setStyleSheet("font-size: 13px; color: #a0a0a0; margin-top: 8px;")
+        layout.addWidget(self.description_label)
+        
         layout.addSpacing(10)
         
         # System info and refresh button
@@ -520,5 +526,6 @@ class StartupStatusTab(QWidget):
     def refresh_ui(self):
         """Refresh UI after language change."""
         self.title_label.setText(self.translator.t("starter.tabs.startup_status"))
+        self.description_label.setText(self.translator.t("startup_status.description"))
         # Refresh data to update list
         self.refresh_data()

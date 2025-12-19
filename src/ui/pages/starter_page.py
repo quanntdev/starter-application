@@ -52,8 +52,8 @@ class StarterPage(QWidget):
             self.translator.t("starter.tabs.settings")
         )
         
-        # Set default tab to Application (index 2)
-        self.tab_widget.setCurrentIndex(2)
+        # Set default tab to Favourite (index 1)
+        self.tab_widget.setCurrentIndex(1)
         
         layout.addWidget(self.tab_widget)
     

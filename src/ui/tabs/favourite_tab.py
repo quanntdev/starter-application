@@ -223,7 +223,21 @@ class FavouriteTab(QWidget):
     
     def init_ui(self):
         """Initialize tab UI."""
-        layout = QHBoxLayout(self)
+        main_layout = QVBoxLayout(self)
+        
+        # Title
+        self.title_label = QLabel(self.translator.t("favourite.title"))
+        self.title_label.setStyleSheet("font-size: 18px; font-weight: 600;")
+        main_layout.addWidget(self.title_label)
+        
+        # Description at the top
+        self.description_label = QLabel(self.translator.t("favourites.description"))
+        self.description_label.setWordWrap(True)
+        self.description_label.setStyleSheet("font-size: 13px; color: #a0a0a0; margin-bottom: 15px;")
+        main_layout.addWidget(self.description_label)
+        
+        # Two-column layout
+        layout = QHBoxLayout()
         layout.setSpacing(20)
         
         # Left column - Favourites list
@@ -268,6 +282,9 @@ class FavouriteTab(QWidget):
         self.right_stack_widget = QWidget()
         self.right_stack_widget.setProperty("class", "card")
         self.right_layout = QVBoxLayout(self.right_stack_widget)
+        
+        # Add layout to main layout
+        main_layout.addLayout(layout)
         
         self.update_right_panel()
         
@@ -514,6 +531,7 @@ class FavouriteTab(QWidget):
     
     def refresh_ui(self):
         """Refresh UI after language change."""
+        self.description_label.setText(self.translator.t("favourites.description"))
         self.title_label.setText(self.translator.t("favourites.title"))
         self.run_all_button.setText("  " + self.translator.t("favourites.run_all"))
         self.load_favourites()

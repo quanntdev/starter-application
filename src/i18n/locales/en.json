@@ -28,7 +28,12 @@
   "starter.tabs.all_apps": "Application",
   "starter.tabs.settings": "Settings",
 
+  "startup_status.title": "Startup Status",
+  "startup_status.description": "View and manage apps that start automatically with Windows. Monitor their status and memory usage.",
+
+  "favourite.title": "Favourite",
   "favourites.title": "Favourite",
+  "favourites.description": "Manage your favorite apps and browsers. Select items and use 'Run All' to launch them together.",
   "favourites.run_all": "Run All",
   "favourites.badge.browser": "Browser",
   "favourites.badge.app": "App",
@@ -44,12 +49,14 @@
   "favourites.right.coming_soon": "Coming soon",
 
   "all_apps.title": "All apps",
+  "all_apps.description": "Discover all installed applications on your system. Click 'Add' to add them to your favorites.",
   "all_apps.search_placeholder": "Search apps...",
   "all_apps.add": "Add",
 
   "starter_settings.title": "Settings",
+  "starter_settings.description": "Configure automatic launch of selected favorites when Windows starts. Set a delay to control when apps launch.",
   "starter_settings.trigger_selected": "Trigger all selected favourites when Windows starts",
-  "starter_settings.delay_seconds": "Delay before launching",
+  "starter_settings.delay_seconds": "Delay before launching (seconds)",
   "starter_settings.save": "Save",
 
   "admin.title": "Admin settings",

@@ -28,7 +28,12 @@
   "starter.tabs.all_apps": "Приложения",
   "starter.tabs.settings": "Настройки",
 
+  "startup_status.title": "Статус запуска",
+  "startup_status.description": "Просмотр и управление приложениями, которые автоматически запускаются с Windows. Отслеживание их статуса и использования памяти.",
+
+  "favourite.title": "Избранное",
   "favourites.title": "Избранное",
+  "favourites.description": "Управление избранными приложениями и браузерами. Выберите элементы и используйте 'Запустить все', чтобы открыть их вместе.",
   "favourites.run_all": "Запустить все",
   "favourites.badge.browser": "Браузер",
   "favourites.badge.app": "Приложение",
@@ -44,12 +49,14 @@
   "favourites.right.coming_soon": "Скоро",
 
   "all_apps.title": "Все приложения",
+  "all_apps.description": "Обнаружение всех установленных приложений в системе. Нажмите 'Добавить', чтобы добавить их в избранное.",
   "all_apps.search_placeholder": "Поиск...",
   "all_apps.add": "Добавить",
 
   "starter_settings.title": "Настройки",
+  "starter_settings.description": "Настройка автоматического запуска выбранных элементов при запуске Windows. Установите задержку для контроля времени запуска приложений.",
   "starter_settings.trigger_selected": "Запускать все выбранные элементы при старте Windows",
-  "starter_settings.delay_seconds": "Задержка перед запуском",
+  "starter_settings.delay_seconds": "Задержка перед запуском (секунды)",
   "starter_settings.save": "Сохранить",
 
   "admin.title": "Настройки администратора",
