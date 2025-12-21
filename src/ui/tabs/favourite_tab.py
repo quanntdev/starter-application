@@ -430,6 +430,12 @@ class FavouriteTab(QWidget):
         
         self.right_layout.addLayout(input_layout)
         
+        # Hint about saving in Settings
+        hint_label = QLabel(self.translator.t("favourites.links.save_hint"))
+        hint_label.setWordWrap(True)
+        hint_label.setStyleSheet("font-size: 12px; color: #4a9eff; padding: 8px 0px; font-style: italic;")
+        self.right_layout.addWidget(hint_label)
+        
         self.right_layout.addSpacing(10)
         
         # Links list with scroll

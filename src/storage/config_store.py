@@ -82,7 +82,16 @@ class ConfigStore:
         """Deserialize dict to config."""
         ui = UIConfig(**data.get("ui", {}))
         admin = AdminConfig(**data.get("admin", {}))
-        starter_settings = StarterSettings(**data.get("starter_settings", {}))
+        
+        # Deserialize starter_settings with defaults
+        starter_settings_data = data.get("starter_settings", {})
+        # If trigger_selected_on_startup key doesn't exist, default to True
+        if "trigger_selected_on_startup" not in starter_settings_data:
+            starter_settings_data["trigger_selected_on_startup"] = True
+        # If delay_seconds key doesn't exist, default to 1 second
+        if "delay_seconds" not in starter_settings_data:
+            starter_settings_data["delay_seconds"] = 1
+        starter_settings = StarterSettings(**starter_settings_data)
         
         favourites = []
         for fav_data in data.get("favourites", []):

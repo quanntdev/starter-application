@@ -56,6 +56,7 @@ class SettingsTab(QWidget):
         self.trigger_checkbox = QCheckBox(
             self.translator.t("starter_settings.trigger_selected")
         )
+        self.trigger_checkbox.stateChanged.connect(self.on_trigger_changed)
         card_layout.addWidget(self.trigger_checkbox)
         
         card_layout.addSpacing(20)
@@ -66,7 +67,7 @@ class SettingsTab(QWidget):
         delay_layout.addWidget(delay_label)
         
         self.delay_combo = QComboBox()
-        self.delay_combo.addItems(["1", "2", "3", "4"])
+        self.delay_combo.addItems(["1", "2", "3", "4", "5", "10", "15", "20"])
         self.delay_combo.setMaximumWidth(100)
         delay_layout.addWidget(self.delay_combo)
         delay_layout.addStretch()
@@ -90,13 +91,33 @@ class SettingsTab(QWidget):
         """Load settings from config."""
         settings = self.config_store.get_starter_settings()
         
-        self.trigger_checkbox.setChecked(settings.trigger_selected_on_startup)
+        # Always default to True (migrate old configs that have False)
+        # This ensures checkbox is always checked by default
+        if not settings.trigger_selected_on_startup:
+            settings.trigger_selected_on_startup = True
+            self.config_store.update_starter_settings(settings)
+        
+        # Always set checkbox to True (default behavior)
+        self.trigger_checkbox.setChecked(True)
         
         # Set delay combo
         delay_str = str(settings.delay_seconds)
         index = self.delay_combo.findText(delay_str)
         if index >= 0:
             self.delay_combo.setCurrentIndex(index)
+        else:
+            # Default to 1 second if not found
+            index = self.delay_combo.findText("1")
+            if index >= 0:
+                self.delay_combo.setCurrentIndex(index)
+    
+    def on_trigger_changed(self, state):
+        """Handle trigger checkbox change - auto-save."""
+        settings = StarterSettings(
+            trigger_selected_on_startup=(state == Qt.CheckState.Checked),
+            delay_seconds=int(self.delay_combo.currentText())
+        )
+        self.config_store.update_starter_settings(settings)
     
     def on_save(self):
         """Handle save button click."""

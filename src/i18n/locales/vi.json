@@ -1,10 +1,16 @@
 {
   "sidebar.starter_app": "Starter App",
   "sidebar.dashboard": "Dashboard",
+  "sidebar.tools": "Tools",
   "sidebar.coming_soon": "Coming soon",
   "sidebar.admin_settings": "Admin settings",
   "sidebar.coming_soon_title": "Sắp có",
   "sidebar.coming_soon_desc": "Tính năng này sẽ sớm ra mắt.",
+
+  "coming_soon.title": "Tự động hóa Windows",
+  "coming_soon.main_description": "Chúng tôi đang phát triển tính năng tự động hóa cho Windows sẽ giúp bạn tự động hóa các công việc hàng ngày.",
+  "coming_soon.feature_description": "✨ <b>Điều gì sắp đến:</b><br><br>• Tự động hóa các tác vụ lặp lại và quy trình làm việc<br>• Lên lịch các tác vụ chạy tự động<br>• Tạo script tự động hóa tùy chỉnh<br>• Tối ưu hóa việc sử dụng máy tính hàng ngày<br><br>Tính năng mạnh mẽ này sẽ giúp bạn tiết kiệm thời gian và làm cho trải nghiệm Windows của bạn hiệu quả hơn.",
+  "coming_soon.call_to_action": "📧 Đăng ký ngay và nhận thông báo khi tính năng này ra mắt!",
 
   "dashboard.title": "Dashboard",
   "dashboard.refresh": "Làm mới",
@@ -46,6 +52,7 @@
   "favourites.links.add": "Add",
   "favourites.links.remove": "Remove",
   "favourites.links.multi_select_hint": "Hãy chọn đúng 1 browser để chỉnh links.",
+  "favourites.links.save_hint": "💡 Sau khi thêm link, hãy vào tab Settings để lưu cấu hình.",
   "favourites.right.coming_soon": "Coming soon",
 
   "all_apps.title": "Tất cả app",
@@ -60,6 +67,9 @@
   "starter_settings.save": "Lưu",
 
   "admin.title": "Admin settings",
+  "admin.settings.title": "Cài đặt",
+  "admin.tabs.settings": "Cài đặt",
+  "admin.tabs.logs": "Logs",
   "admin.tabs.languages": "Languages",
   "admin.tabs.trigger": "Setting trigger",
   "admin.tabs.rules": "Rules",
@@ -97,6 +107,27 @@
   "admin.rules.error_title": "Lỗi",
   "admin.rules.error_message": "Không thể khởi động lại với quyền Administrator",
 
+  "admin.logs.title": "Logs",
+  "admin.logs.description": "Xem logs chi tiết của ứng dụng. Logs được tự động lưu và xoay vòng để tránh sử dụng quá nhiều dung lượng đĩa.",
+  "admin.logs.search_placeholder": "Tìm kiếm logs...",
+  "admin.logs.refresh": "Làm mới",
+  "admin.logs.clear": "Xóa",
+  "admin.logs.export": "Xuất",
+  "admin.logs.auto_refresh": "Tự động làm mới",
+  "admin.logs.auto_refresh_off": "Tự động làm mới (TẮT)",
+  "admin.logs.no_logs": "Không có logs",
+  "admin.logs.status": "Hiển thị {count} mục log",
+  "admin.logs.error_loading": "Lỗi khi tải logs",
+  "admin.logs.clear_confirm_title": "Xóa Logs",
+  "admin.logs.clear_confirm_message": "Bạn có chắc chắn muốn xóa tất cả logs? Hành động này không thể hoàn tác.",
+  "admin.logs.cleared_title": "Đã xóa logs",
+  "admin.logs.cleared_message": "Tất cả logs đã được xóa thành công.",
+  "admin.logs.export_dialog_title": "Xuất Logs",
+  "admin.logs.export_success_title": "Xuất thành công",
+  "admin.logs.export_success_message": "Logs đã được xuất đến:\n{path}",
+  "admin.logs.export_error_title": "Xuất thất bại",
+  "admin.logs.export_error_message": "Không thể xuất logs. Vui lòng kiểm tra quyền truy cập file.",
+
   "common.actions.test": "Test",
   "common.actions.delete": "Xoá",
   "common.messages.saved": "Đã lưu!",
@@ -113,6 +144,11 @@
   "email_registration.submitting": "Đang gửi...",
   "email_registration.success": "✅ Đăng ký thành công! Đang mở khóa ứng dụng...",
   "email_registration.error_network": "Lỗi mạng: {error}",
-  "email_registration.error_generic": "Lỗi: {error}\nVui lòng thử lại."
+  "email_registration.error_generic": "Lỗi: {error}\nVui lòng thử lại.",
+
+  "tools.title": "Tools",
+  "tools.description": "Quản lý các tool tùy chỉnh của bạn. Click 'Run' để chạy tool.",
+  "tools.use_tool": "Chạy Tool",
+  "tools.run": "Run"
 }
 

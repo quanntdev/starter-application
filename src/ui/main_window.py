@@ -12,6 +12,7 @@ from ui.theme import apply_theme
 from ui.pages.starter_page import StarterPage
 from ui.pages.admin_page import AdminPage
 from ui.pages.coming_soon_page import ComingSoonPage
+from ui.pages.tools_page import ToolsPage
 from ui.components.email_registration_dialog import EmailRegistrationDialog
 from services.email_registration_service import EmailRegistrationService
 try:
@@ -84,6 +85,14 @@ class Sidebar(QWidget):
         self.menu_buttons["starter"] = btn_starter
         layout.addWidget(btn_starter)
         
+        # Tools button
+        btn_tools = QPushButton("  " + self.translator.t("sidebar.tools"))
+        btn_tools.setIcon(qta.icon('fa5s.tools', color='#e0e0e0'))
+        btn_tools.setCheckable(True)
+        btn_tools.clicked.connect(lambda: self.menu_changed.emit("tools"))
+        self.menu_buttons["tools"] = btn_tools
+        layout.addWidget(btn_tools)
+        
         # Coming soon button (1 placeholder)
         btn_soon = QPushButton("  " + self.translator.t("sidebar.coming_soon"))
         btn_soon.setIcon(qta.icon('fa5s.rocket', color='#e0e0e0'))
@@ -112,6 +121,7 @@ class Sidebar(QWidget):
     def refresh_ui(self):
         """Refresh UI after language change."""
         self.menu_buttons["starter"].setText("  " + self.translator.t("sidebar.starter_app"))
+        self.menu_buttons["tools"].setText("  " + self.translator.t("sidebar.tools"))
         self.menu_buttons["soon_0"].setText("  " + self.translator.t("sidebar.coming_soon"))
         self.menu_buttons["admin"].setText("  " + self.translator.t("sidebar.admin_settings"))
 
@@ -192,10 +202,12 @@ class MainWindow(QMainWindow):
         
         # Create pages
         self.starter_page = StarterPage(self.config_store, self.translator, is_startup_launch=self.is_startup_launch)
+        self.tools_page = ToolsPage(self.config_store, self.translator)
         self.admin_page = AdminPage(self.config_store, self.translator, self)
         self.coming_soon_page = ComingSoonPage(self.translator)
         
         self.content_stack.addWidget(self.starter_page)
+        self.content_stack.addWidget(self.tools_page)
         self.content_stack.addWidget(self.admin_page)
         self.content_stack.addWidget(self.coming_soon_page)
         
@@ -210,6 +222,8 @@ class MainWindow(QMainWindow):
         
         if menu_key == "starter":
             self.content_stack.setCurrentWidget(self.starter_page)
+        elif menu_key == "tools":
+            self.content_stack.setCurrentWidget(self.tools_page)
         elif menu_key == "admin":
             self.content_stack.setCurrentWidget(self.admin_page)
         elif menu_key.startswith("soon_"):
@@ -279,8 +293,8 @@ class MainWindow(QMainWindow):
     def refresh_ui(self):
         """Refresh all UI elements after language change."""
         self.sidebar.refresh_ui()
-        self.dashboard_page.refresh_ui()
         self.starter_page.refresh_ui()
+        self.tools_page.refresh_ui()
         self.admin_page.refresh_ui()
         self.coming_soon_page.refresh_ui()
 

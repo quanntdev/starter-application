@@ -108,12 +108,23 @@ def request_admin_restart():
 
 def main():
     """Initialize and run the application."""
+    # Initialize logging service early
+    logging_service = None
+    try:
+        from services.logging_service import get_logging_service
+        logging_service = get_logging_service()
+        logging_service.info("Application starting...")
+    except Exception as e:
+        print(f"Warning: Failed to initialize logging service: {e}")
+    
     # Always allow app to run, even without admin
     # Only request admin if user explicitly enabled it in settings AND we don't have it yet
     try:
         # Load config first to check admin requirement
         temp_config = ConfigStore()
         temp_config.load()
+        if logging_service:
+            logging_service.info("Configuration loaded successfully")
         
         # Check if user wants admin and we don't have it yet
         # Only request admin if user explicitly enabled it in settings

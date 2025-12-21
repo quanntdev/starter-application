@@ -34,14 +34,14 @@ class StarterPage(QWidget):
         # Connect all_apps_tab to favourite_tab for refresh
         self.all_apps_tab.favourite_added.connect(self.on_favourite_added)
         
-        # Add tabs in order
-        self.tab_widget.addTab(
-            self.startup_status_tab,
-            self.translator.t("starter.tabs.startup_status")
-        )
+        # Add tabs in order - Favourite first
         self.tab_widget.addTab(
             self.favourite_tab,
             self.translator.t("starter.tabs.favourite")
+        )
+        self.tab_widget.addTab(
+            self.startup_status_tab,
+            self.translator.t("starter.tabs.startup_status")
         )
         self.tab_widget.addTab(
             self.all_apps_tab,
@@ -52,8 +52,8 @@ class StarterPage(QWidget):
             self.translator.t("starter.tabs.settings")
         )
         
-        # Set default tab to Favourite (index 1)
-        self.tab_widget.setCurrentIndex(1)
+        # Set default tab to Favourite (index 0)
+        self.tab_widget.setCurrentIndex(0)
         
         layout.addWidget(self.tab_widget)
     
@@ -63,8 +63,8 @@ class StarterPage(QWidget):
     
     def refresh_ui(self):
         """Refresh UI after language change."""
-        self.tab_widget.setTabText(0, self.translator.t("starter.tabs.startup_status"))
-        self.tab_widget.setTabText(1, self.translator.t("starter.tabs.favourite"))
+        self.tab_widget.setTabText(0, self.translator.t("starter.tabs.favourite"))
+        self.tab_widget.setTabText(1, self.translator.t("starter.tabs.startup_status"))
         self.tab_widget.setTabText(2, self.translator.t("starter.tabs.all_apps"))
         self.tab_widget.setTabText(3, self.translator.t("starter.tabs.settings"))
         

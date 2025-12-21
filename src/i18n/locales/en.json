@@ -1,10 +1,16 @@
 {
   "sidebar.starter_app": "Starter App",
   "sidebar.dashboard": "Dashboard",
+  "sidebar.tools": "Tools",
   "sidebar.coming_soon": "Coming soon",
   "sidebar.admin_settings": "Admin settings",
   "sidebar.coming_soon_title": "Coming soon",
   "sidebar.coming_soon_desc": "This feature will be available soon.",
+
+  "coming_soon.title": "Windows Automation",
+  "coming_soon.main_description": "We're developing an automation feature for Windows that will help you automate your daily tasks.",
+  "coming_soon.feature_description": "✨ <b>What's Coming:</b><br><br>• Automate repetitive tasks and workflows<br>• Schedule tasks to run automatically<br>• Create custom automation scripts<br>• Streamline your daily computer usage<br><br>This powerful feature will save you time and make your Windows experience more efficient.",
+  "coming_soon.call_to_action": "📧 Register now and be notified when this feature launches!",
 
   "dashboard.title": "Dashboard",
   "dashboard.refresh": "Refresh",
@@ -46,6 +52,7 @@
   "favourites.links.add": "Add",
   "favourites.links.remove": "Remove",
   "favourites.links.multi_select_hint": "Select exactly one browser to edit its links.",
+  "favourites.links.save_hint": "💡 After adding links, go to Settings tab to save your configuration.",
   "favourites.right.coming_soon": "Coming soon",
 
   "all_apps.title": "All apps",
@@ -60,6 +67,9 @@
   "starter_settings.save": "Save",
 
   "admin.title": "Admin settings",
+  "admin.settings.title": "Settings",
+  "admin.tabs.settings": "Settings",
+  "admin.tabs.logs": "Logs",
   "admin.tabs.languages": "Languages",
   "admin.tabs.trigger": "Setting trigger",
   "admin.tabs.rules": "Rules",
@@ -97,6 +107,27 @@
   "admin.rules.error_title": "Error",
   "admin.rules.error_message": "Failed to restart with Administrator privileges",
 
+  "admin.logs.title": "Logs",
+  "admin.logs.description": "View detailed application logs. Logs are automatically saved and rotated to prevent excessive disk usage.",
+  "admin.logs.search_placeholder": "Search logs...",
+  "admin.logs.refresh": "Refresh",
+  "admin.logs.clear": "Clear",
+  "admin.logs.export": "Export",
+  "admin.logs.auto_refresh": "Auto-refresh",
+  "admin.logs.auto_refresh_off": "Auto-refresh (OFF)",
+  "admin.logs.no_logs": "No logs available",
+  "admin.logs.status": "Showing {count} log entries",
+  "admin.logs.error_loading": "Error loading logs",
+  "admin.logs.clear_confirm_title": "Clear Logs",
+  "admin.logs.clear_confirm_message": "Are you sure you want to clear all logs? This action cannot be undone.",
+  "admin.logs.cleared_title": "Logs Cleared",
+  "admin.logs.cleared_message": "All logs have been cleared successfully.",
+  "admin.logs.export_dialog_title": "Export Logs",
+  "admin.logs.export_success_title": "Export Successful",
+  "admin.logs.export_success_message": "Logs have been exported to:\n{path}",
+  "admin.logs.export_error_title": "Export Failed",
+  "admin.logs.export_error_message": "Failed to export logs. Please check file permissions.",
+
   "common.actions.test": "Test",
   "common.actions.delete": "Delete",
   "common.messages.saved": "Saved!",
@@ -113,6 +144,11 @@
   "email_registration.submitting": "Submitting...",
   "email_registration.success": "✓ Registration successful! Unlocking application...",
   "email_registration.error_network": "Network error: {error}",
-  "email_registration.error_generic": "Error: {error}\nPlease try again."
+  "email_registration.error_generic": "Error: {error}\nPlease try again.",
+
+  "tools.title": "Tools",
+  "tools.description": "Manage your custom tools. Click 'Run' to execute a tool.",
+  "tools.use_tool": "Run Tool",
+  "tools.run": "Run"
 }
 

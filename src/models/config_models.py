@@ -19,8 +19,8 @@ class AdminConfig:
 @dataclass
 class StarterSettings:
     """Starter app settings."""
-    trigger_selected_on_startup: bool = False
-    delay_seconds: int = 10
+    trigger_selected_on_startup: bool = True  # Default to True
+    delay_seconds: int = 1  # Default to 1 second
 
 
 @dataclass
@@ -33,6 +33,18 @@ class Favourite:
     label: str = "App"
     selected: bool = False
     browser_links: List[str] = field(default_factory=list)
+
+
+@dataclass
+class Tool:
+    """Tool model."""
+    id: str
+    name: str
+    icon: str = "fa5s.cube"  # qtawesome icon name
+    tags: List[str] = field(default_factory=list)
+    description: str = ""
+    status: str = "inactive"  # active | inactive
+    tag: str = "free"  # free | premium
 
 
 @dataclass
