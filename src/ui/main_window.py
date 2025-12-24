@@ -13,8 +13,10 @@ from ui.pages.starter_page import StarterPage
 from ui.pages.admin_page import AdminPage
 from ui.pages.coming_soon_page import ComingSoonPage
 from ui.pages.tools_page import ToolsPage
+from ui.pages.clipboard_history_page import ClipboardHistoryPage
 from ui.components.email_registration_dialog import EmailRegistrationDialog
 from services.email_registration_service import EmailRegistrationService
+from tools.clipboard.storage import ClipboardStorage
 try:
     from src import __version__
 except ImportError:
@@ -200,16 +202,28 @@ class MainWindow(QMainWindow):
         self.content_stack = QStackedWidget()
         self.content_stack.setObjectName("content")
         
+        # Create clipboard storage (shared)
+        self.clipboard_storage = ClipboardStorage()
+        
         # Create pages
         self.starter_page = StarterPage(self.config_store, self.translator, is_startup_launch=self.is_startup_launch)
-        self.tools_page = ToolsPage(self.config_store, self.translator)
+        self.tools_page = ToolsPage(self.config_store, self.translator, clipboard_storage=self.clipboard_storage)
         self.admin_page = AdminPage(self.config_store, self.translator, self)
         self.coming_soon_page = ComingSoonPage(self.translator)
+        # Pass clipboard service from tools_page to history page
+        clipboard_service = None
+        if hasattr(self.tools_page, 'clipboard_manager') and hasattr(self.tools_page.clipboard_manager, 'service'):
+            clipboard_service = self.tools_page.clipboard_manager.service
+        self.clipboard_history_page = ClipboardHistoryPage(self.clipboard_storage, self.translator, clipboard_service=clipboard_service)
+        
+        # Connect tools page signal to navigate to clipboard history
+        self.tools_page.view_clipboard_history.connect(self.show_clipboard_history)
         
         self.content_stack.addWidget(self.starter_page)
         self.content_stack.addWidget(self.tools_page)
         self.content_stack.addWidget(self.admin_page)
         self.content_stack.addWidget(self.coming_soon_page)
+        self.content_stack.addWidget(self.clipboard_history_page)
         
         # Set Starter App as default page
         self.content_stack.setCurrentWidget(self.starter_page)
@@ -228,6 +242,11 @@ class MainWindow(QMainWindow):
             self.content_stack.setCurrentWidget(self.admin_page)
         elif menu_key.startswith("soon_"):
             self.content_stack.setCurrentWidget(self.coming_soon_page)
+    
+    def show_clipboard_history(self):
+        """Show clipboard history page."""
+        self.content_stack.setCurrentWidget(self.clipboard_history_page)
+        self.clipboard_history_page.refresh_content()
     
     def check_email_registration(self):
         """Check if email is registered, show dialog if not."""

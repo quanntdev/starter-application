@@ -149,6 +149,8 @@
   "tools.title": "Tools",
   "tools.description": "Quản lý các tool tùy chỉnh của bạn. Click 'Run' để chạy tool.",
   "tools.use_tool": "Chạy Tool",
-  "tools.run": "Run"
+  "tools.run": "Run",
+  "tools.pause": "Tạm dừng",
+  "tools.view_details": "Xem chi tiết"
 }
 

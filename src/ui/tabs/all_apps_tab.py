@@ -161,13 +161,14 @@ class AllAppsTab(QWidget):
         label = self.translator.t(f"favourites.label.{kind}")
         
         # Create favourite
+        # Set selected=True by default so new apps will auto-launch on startup
         fav = Favourite(
             id=f"fav::{uuid.uuid4()}",
             name=app_info.name,
             lnk_path=app_info.lnk_path,
             kind=kind,
             label=label,
-            selected=False,
+            selected=True,  # Default to True so app auto-launches on startup
             browser_links=[]
         )
         

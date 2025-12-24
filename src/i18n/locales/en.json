@@ -149,6 +149,8 @@
   "tools.title": "Tools",
   "tools.description": "Manage your custom tools. Click 'Run' to execute a tool.",
   "tools.use_tool": "Run Tool",
-  "tools.run": "Run"
+  "tools.run": "Run",
+  "tools.pause": "Pause",
+  "tools.view_details": "View details"
 }
 

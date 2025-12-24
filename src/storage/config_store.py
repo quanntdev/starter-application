@@ -85,8 +85,12 @@ class ConfigStore:
         
         # Deserialize starter_settings with defaults
         starter_settings_data = data.get("starter_settings", {})
-        # If trigger_selected_on_startup key doesn't exist, default to True
+        # If trigger_selected_on_startup key doesn't exist or is False, default to True
+        # This migrates old configs that have False to True
         if "trigger_selected_on_startup" not in starter_settings_data:
+            starter_settings_data["trigger_selected_on_startup"] = True
+        elif starter_settings_data.get("trigger_selected_on_startup") is False:
+            # Force migrate old False values to True
             starter_settings_data["trigger_selected_on_startup"] = True
         # If delay_seconds key doesn't exist, default to 1 second
         if "delay_seconds" not in starter_settings_data:

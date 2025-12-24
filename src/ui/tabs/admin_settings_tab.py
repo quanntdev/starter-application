@@ -302,3 +302,15 @@ class AdminSettingsTab(QWidget):
         # Reload autostart status
         self.load_status()
 
+
+
+
+
+
+
+
+
+
+
+
+
